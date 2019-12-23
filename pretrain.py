@@ -2,19 +2,50 @@ import random
 import torch
 import torch.nn as nn
 from io import open
-from neural_net.rnn import Encoder
 import string
 import matplotlib.pyplot as plt
 import time
 import math
-
+import os
 
 CHARS = string.ascii_letters
 EPOCH = 1000
 STRING_SIZE = 6
 n_letters = len(CHARS) + 1 # Plus EOS marker
 
-lines = open('generators/us_lastname.txt', encoding='utf-8').read().strip().split('\n')
+lines = open('us_lastname.txt', encoding='utf-8').read().strip().split('\n')
+
+class Encoder(nn.Module):
+    """
+    Takes in an one-hot tensor of names and produces hidden state and cell state
+    for decoder LSTM to use.
+
+    input_size: N_LETTER
+    hidden_size: Size of the hidden dimension
+    """
+    def __init__(self, input_size, hidden_size, num_layers=2):
+        super(Encoder, self).__init__()
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        self.num_layers = num_layers
+        # Initialize LSTM
+        self.lstm = nn.LSTM(input_size, hidden_size, num_layers)
+
+    def forward(self, input, hidden):
+        """
+        Run LSTM through 1 time step.
+
+        SHAPE REQUIREMENT
+        - input: <1 x batch_size x N_LETTER>
+        - hidden: (<num_layer x batch_size x hidden_size>, <num_layer x batch_size x hidden_size>)
+        """
+        #input = input.view(1, self.batch_size, -1)
+        lstm_out, hidden = self.lstm(input, hidden)
+        return lstm_out, hidden
+    
+    def init_hidden(self, batch_size=1):
+        return (torch.zeros(self.num_layers,batch_size,self.hidden_size),
+                torch.zeros(self.num_layers,batch_size,self.hidden_size))
 
 class Decoder(nn.Module):
     """
@@ -146,7 +177,6 @@ def timeSince(since):
     return '%dm %ds' % (m, s)
 
 start = time.time()
-
 for iter in range(1, n_iters + 1):
     input = randomLastName(lines)
     name, output, loss = train(input)
@@ -160,36 +190,8 @@ for iter in range(1, n_iters + 1):
         all_losses.append(total_loss / plot_every)
         total_loss = 0
 
+torch.save({'weights':dec.state_dict()}, os.path.join("checkpt.pth.tar"))
+
 plt.figure()
 plt.plot(all_losses)
 plt.show()
-max_length = 20
-
-# Sample from a starting letter
-def sample(start_letter='A'):
-    with torch.no_grad():  # no need to track history in sampling
-        input = string_to_tensor(start_letter)
-        hidden = dec.initHidden()
-
-        output_name = start_letter
-
-        for i in range(max_length):
-            output, hidden = dec(input[0].unsqueeze_(0), hidden)
-            topv, topi = output.topk(1)
-            topi = topi[0][0]
-            if topi == n_letters - 1:
-                break
-            else:
-                letter = CHARS[topi]
-                output_name += letter
-            input = string_to_tensor(letter)
-
-        return output_name
-
-# Get multiple samples from multiple starting letters
-def samples(start_letters='ABC'):
-    for start_letter in start_letters:
-        print(sample(start_letter))
-
-samples('R')
-
