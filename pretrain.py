@@ -11,7 +11,7 @@ import os
 CHARS = string.ascii_letters
 EPOCH = 1000
 STRING_SIZE = 6
-n_letters = len(CHARS) + 1 # Plus EOS marker
+n_letters = len(CHARS)
 
 lines = open('us_lastname.txt', encoding='utf-8').read().strip().split('\n')
 
@@ -152,8 +152,8 @@ def train(x):
     for i in range(x.shape[0]):
         dec_probs, dec_hidden = dec(dec_input, dec_hidden)
         _, nonzero_indexes = x[i].topk(1)
-        loss += criterion(dec_probs[0], nonzero_indexes[0])
         best_index = torch.argmax(dec_probs, dim=2).item()
+        loss += criterion(dec_probs[0], nonzero_indexes[0])
         name += CHARS[best_index]
         dec_input = torch.zeros(1, 1, n_letters)
         dec_input[0, 0, best_index] = 1.
