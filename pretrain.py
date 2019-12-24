@@ -7,13 +7,14 @@ import matplotlib.pyplot as plt
 import time
 import math
 import os
+import pandas as pd
 
 CHARS = string.ascii_letters
-EPOCH = 1000
-STRING_SIZE = 6
+EPOCH = 10000000
 n_letters = len(CHARS)
 
 lines = open('us_lastname.txt', encoding='utf-8').read().strip().split('\n')
+df = pd.read_csv('cleaned.csv')
 
 class Encoder(nn.Module):
     """
@@ -111,11 +112,10 @@ def targetTensor(line):
 
 
 def randomLastName(data):
-    return data[random.randint(0, len(data) - 1)]
+    return data.iloc[random.randint(0, len(data) - 1)]['last']
 
 def randomTrainingExample():
-    line = randomLastName(lines)
-    print(line)
+    line = randomLastName(df)
     input_line_tensor = string_to_tensor(line)
     target_line_tensor = targetTensor(line)
     return input_line_tensor, target_line_tensor
@@ -178,7 +178,7 @@ def timeSince(since):
 
 start = time.time()
 for iter in range(1, n_iters + 1):
-    input = randomLastName(lines)
+    input = randomLastName(df)
     name, output, loss = train(input)
     total_loss += loss
 
