@@ -93,11 +93,9 @@ def char_to_index(char: str) -> int:
 
 
 def string_to_tensor(string: str) -> list:
-    tensor = torch.zeros(len(string)+2,1,n_letters)
-    tensor[0, 0, CHARS.find(SOS)] = 1
-    tensor[len(string)+1, 0, CHARS.find(EOS)] = 1
+    tensor = torch.zeros(len(string),1,n_letters)
     for i,char in enumerate(string):
-        tensor[i+1,0,char_to_index(char)] = 1
+        tensor[i,0,char_to_index(char)] = 1
     return tensor
 
 def int_to_tensor(index: int) -> list:
