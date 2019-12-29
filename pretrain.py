@@ -12,7 +12,6 @@ import pandas as pd
 EOS = '1'
 SOS = '0'
 CHARS = string.ascii_letters + EOS + SOS
-EPOCH = 10000000
 n_letters = len(CHARS)
 
 df = pd.read_csv('cleaned.csv')
@@ -87,10 +86,8 @@ class Decoder(nn.Module):
         return (torch.zeros(self.num_layers, batch_size, self.hidden_size),
                 torch.zeros(self.num_layers, batch_size, self.hidden_size))
 
-
 def char_to_index(char: str) -> int:
     return CHARS.find(char)
-
 
 def string_to_tensor(string: str) -> list:
     tensor = torch.zeros(len(string),1,n_letters)
@@ -103,8 +100,8 @@ def int_to_tensor(index: int) -> list:
     tensor[:,index] = 1
     return tensor
 
-def randomName(data):
-    return data.iloc[random.randint(0, len(data) - 1)]['middle']
+def randomName(data, column: str):
+    return data.iloc[random.randint(0, len(data) - 1)][column]
 
 def timeSince(since):
     now = time.time()
@@ -143,40 +140,37 @@ def train(x):
     dec_optim.step()
     return name, dec_probs, loss.item()
 
+def run_iter(n_iters, column: str, chckpt):
+    print_every = 5000
+    plot_every = 500
+    all_losses = []
+    total_loss = 0 # Reset every plot_every iters
+    start = time.time()
+    for iter in range(1, n_iters + 1):
+        input = randomName(df, column)
+        if not isinstance(input,str):
+            continue
+        name, output, loss = train(input)
+        total_loss += loss
+
+        if iter % print_every == 0:
+            print('%s (%d %d%%) %.4f' % (timeSince(start), iter, iter / n_iters * 100, loss))
+            print('input: %s, output: %s' % (input, name))
+
+        if iter % plot_every == 0:
+            all_losses.append(total_loss / plot_every)
+            total_loss = 0
+
+    torch.save({'weights':dec.state_dict()}, os.path.join(f"{chckpt}_checkpt.pth.tar"))
+
 enc = Encoder(n_letters,16,1)
 dec = Decoder(n_letters, 16, n_letters)
 criterion = nn.NLLLoss()
 
 learning_rate = 0.0005
 
-
 enc_optim = torch.optim.Adam(enc.parameters(),lr=0.001)
 dec_optim = torch.optim.Adam(dec.parameters(),lr=0.001)
 
-n_iters = 100000
-print_every = 5000
-plot_every = 500
-all_losses = []
-total_loss = 0 # Reset every plot_every iters
-
-start = time.time()
-for iter in range(1, n_iters + 1):
-    input = randomName(df)
-    if not isinstance(input,str):
-        continue
-    name, output, loss = train(input)
-    total_loss += loss
-
-    if iter % print_every == 0:
-        print('%s (%d %d%%) %.4f' % (timeSince(start), iter, iter / n_iters * 100, loss))
-        print('input: %s, output: %s' % (input, name))
-
-    if iter % plot_every == 0:
-        all_losses.append(total_loss / plot_every)
-        total_loss = 0
-
-torch.save({'weights':dec.state_dict()}, os.path.join("middle_name_checkpt.pth.tar"))
-
-plt.figure()
-plt.plot(all_losses)
-plt.show()
+run_iter(1000000, "first", "first")
+run_iter(1000000, "last", "last")
