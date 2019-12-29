@@ -104,7 +104,7 @@ def int_to_tensor(index: int) -> list:
     return tensor
 
 def randomName(data):
-    return data.iloc[random.randint(0, len(data) - 1)]['last']
+    return data.iloc[random.randint(0, len(data) - 1)]['middle']
 
 def timeSince(since):
     now = time.time()
@@ -162,6 +162,8 @@ total_loss = 0 # Reset every plot_every iters
 start = time.time()
 for iter in range(1, n_iters + 1):
     input = randomName(df)
+    if not isinstance(input,str):
+        continue
     name, output, loss = train(input)
     total_loss += loss
 
@@ -173,7 +175,7 @@ for iter in range(1, n_iters + 1):
         all_losses.append(total_loss / plot_every)
         total_loss = 0
 
-torch.save({'weights':dec.state_dict()}, os.path.join("last_name_checkpt.pth.tar"))
+torch.save({'weights':dec.state_dict()}, os.path.join("middle_name_checkpt.pth.tar"))
 
 plt.figure()
 plt.plot(all_losses)
