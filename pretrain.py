@@ -9,11 +9,12 @@ import math
 import os
 import pandas as pd
 
-CHARS = string.ascii_letters
+EOS = '1'
+SOS = '0'
+CHARS = string.ascii_letters + EOS + SOS
 EPOCH = 10000000
 n_letters = len(CHARS)
 
-lines = open('us_lastname.txt', encoding='utf-8').read().strip().split('\n')
 df = pd.read_csv('cleaned.csv')
 
 class Encoder(nn.Module):
@@ -87,16 +88,16 @@ class Decoder(nn.Module):
                 torch.zeros(self.num_layers, batch_size, self.hidden_size))
 
 
-
-
 def char_to_index(char: str) -> int:
     return CHARS.find(char)
 
 
 def string_to_tensor(string: str) -> list:
-    tensor = torch.zeros(len(string),1,n_letters)
+    tensor = torch.zeros(len(string)+2,1,n_letters)
+    tensor[0, 0, CHARS.find(SOS)] = 1
+    tensor[len(string)+1, 0, CHARS.find(EOS)] = 1
     for i,char in enumerate(string):
-        tensor[i,0,char_to_index(char)] = 1
+        tensor[i+1,0,char_to_index(char)] = 1
     return tensor
 
 def int_to_tensor(index: int) -> list:
@@ -104,35 +105,15 @@ def int_to_tensor(index: int) -> list:
     tensor[:,index] = 1
     return tensor
 
-# LongTensor of second letter to end (EOS) for target
-def targetTensor(line):
-    letter_indexes = [CHARS.find(line[li]) for li in range(1, len(line))]
-    letter_indexes.append(n_letters - 1) # EOS
-    return torch.LongTensor(letter_indexes)
-
-
-def randomLastName(data):
+def randomName(data):
     return data.iloc[random.randint(0, len(data) - 1)]['last']
 
-def randomTrainingExample():
-    line = randomLastName(df)
-    input_line_tensor = string_to_tensor(line)
-    target_line_tensor = targetTensor(line)
-    return input_line_tensor, target_line_tensor
-
-
-
-
-enc = Encoder(n_letters,16,1)
-dec = Decoder(n_letters, 16, n_letters)
-criterion = nn.NLLLoss()
-
-learning_rate = 0.0005
-
-
-enc_optim = torch.optim.Adam(enc.parameters(),lr=0.001)
-dec_optim = torch.optim.Adam(dec.parameters(),lr=0.001)
-
+def timeSince(since):
+    now = time.time()
+    s = now - since
+    m = math.floor(s / 60)
+    s -= m * 60
+    return '%dm %ds' % (m, s)
 
 def train(x):
     enc_optim.zero_grad()
@@ -145,10 +126,11 @@ def train(x):
         # RNN requires 3 dimensional inputs
         _, enc_hidden = enc(x[i].unsqueeze(0), enc_hidden)
 
-    dec_input = torch.zeros(1, 1,n_letters)
+    dec_input = torch.zeros(1, 1, n_letters)
     dec_input[0, 0, -1] = 1.
     dec_hidden = enc_hidden
     name = ''
+    
     for i in range(x.shape[0]):
         dec_probs, dec_hidden = dec(dec_input, dec_hidden)
         _, nonzero_indexes = x[i].topk(1)
@@ -163,22 +145,25 @@ def train(x):
     dec_optim.step()
     return name, dec_probs, loss.item()
 
+enc = Encoder(n_letters,16,1)
+dec = Decoder(n_letters, 16, n_letters)
+criterion = nn.NLLLoss()
+
+learning_rate = 0.0005
+
+
+enc_optim = torch.optim.Adam(enc.parameters(),lr=0.001)
+dec_optim = torch.optim.Adam(dec.parameters(),lr=0.001)
+
 n_iters = 100000
 print_every = 5000
 plot_every = 500
 all_losses = []
 total_loss = 0 # Reset every plot_every iters
 
-def timeSince(since):
-    now = time.time()
-    s = now - since
-    m = math.floor(s / 60)
-    s -= m * 60
-    return '%dm %ds' % (m, s)
-
 start = time.time()
 for iter in range(1, n_iters + 1):
-    input = randomLastName(df)
+    input = randomName(df)
     name, output, loss = train(input)
     total_loss += loss
 
@@ -190,7 +175,7 @@ for iter in range(1, n_iters + 1):
         all_losses.append(total_loss / plot_every)
         total_loss = 0
 
-torch.save({'weights':dec.state_dict()}, os.path.join("checkpt.pth.tar"))
+torch.save({'weights':dec.state_dict()}, os.path.join("last_name_checkpt.pth.tar"))
 
 plt.figure()
 plt.plot(all_losses)
