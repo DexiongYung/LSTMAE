@@ -163,8 +163,9 @@ def run_iter(n_iters, column: str, chckpt):
 
     torch.save({'weights':dec.state_dict()}, os.path.join(f"{chckpt}_checkpt.pth.tar"))
 
-enc = Encoder(n_letters,16,1)
-dec = Decoder(n_letters, 16, n_letters)
+hidden_layer_sz = 64
+enc = Encoder(n_letters, hidden_layer_sz, 1)
+dec = Decoder(n_letters, hidden_layer_sz, n_letters)
 criterion = nn.NLLLoss()
 
 learning_rate = 0.0005
