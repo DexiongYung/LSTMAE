@@ -9,9 +9,10 @@ import math
 import os
 import pandas as pd
 
-EOS = '1'
-SOS = '0'
-CHARS = string.ascii_letters + EOS + SOS
+SOS = '1'
+EOS = '2'
+PAD = '3'
+CHARS = string.ascii_lowercase + "'-" + SOS + EOS + PAD
 n_letters = len(CHARS)
 
 df = pd.read_csv('cleaned.csv')
@@ -115,6 +116,7 @@ def train(x):
     dec_optim.zero_grad()
 
     loss = 0.
+    x = x.lower()
     x = string_to_tensor(x)
     enc_hidden = enc.init_hidden()
     for i in range(x.shape[0]):
