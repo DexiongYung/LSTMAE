@@ -12,8 +12,9 @@ import pandas as pd
 SOS = '1'
 EOS = '2'
 PAD = '3'
-CHARS = string.ascii_lowercase + "'-" + SOS + EOS + PAD
-n_letters = len(CHARS)
+DROP_OUT = '4'
+CHARS = string.ascii_lowercase + "'-" + SOS + EOS + PAD + DROP_OUT
+LETTERS_COUNT = len(CHARS)
 
 df = pd.read_csv('cleaned.csv')
 
@@ -91,13 +92,13 @@ def char_to_index(char: str) -> int:
     return CHARS.find(char)
 
 def string_to_tensor(string: str) -> list:
-    tensor = torch.zeros(len(string),1,n_letters)
+    tensor = torch.zeros(len(string),1,LETTERS_COUNT)
     for i,char in enumerate(string):
         tensor[i,0,char_to_index(char)] = 1
     return tensor
 
 def int_to_tensor(index: int) -> list:
-    tensor = torch.zeros([1, n_letters],dtype=torch.long)
+    tensor = torch.zeros([1, LETTERS_COUNT],dtype=torch.long)
     tensor[:,index] = 1
     return tensor
 
@@ -123,7 +124,7 @@ def train(x):
         # RNN requires 3 dimensional inputs
         _, enc_hidden = enc(x[i].unsqueeze(0), enc_hidden)
 
-    dec_input = torch.zeros(1, 1, n_letters)
+    dec_input = torch.zeros(1, 1, LETTERS_COUNT)
     dec_input[0, 0, -1] = 1.
     dec_hidden = enc_hidden
     name = ''
@@ -134,7 +135,7 @@ def train(x):
         best_index = torch.argmax(dec_probs, dim=2).item()
         loss += criterion(dec_probs[0], nonzero_indexes[0])
         name += CHARS[best_index]
-        dec_input = torch.zeros(1, 1, n_letters)
+        dec_input = torch.zeros(1, 1, LETTERS_COUNT)
         dec_input[0, 0, best_index] = 1.
 
     loss.backward()
@@ -166,8 +167,8 @@ def run_iter(n_iters, column: str, chckpt):
     torch.save({'weights':dec.state_dict()}, os.path.join(f"{chckpt}_checkpt.pth.tar"))
 
 hidden_layer_sz = 64
-enc = Encoder(n_letters, hidden_layer_sz, 1)
-dec = Decoder(n_letters, hidden_layer_sz, n_letters)
+enc = Encoder(LETTERS_COUNT, hidden_layer_sz, 1)
+dec = Decoder(LETTERS_COUNT, hidden_layer_sz, LETTERS_COUNT)
 criterion = nn.NLLLoss()
 
 learning_rate = 0.0005
@@ -175,5 +176,6 @@ learning_rate = 0.0005
 enc_optim = torch.optim.Adam(enc.parameters(),lr=0.001)
 dec_optim = torch.optim.Adam(dec.parameters(),lr=0.001)
 
-run_iter(1000000, "first", "first")
-run_iter(1000000, "last", "last")
+run_iter(100000, "first", "first")
+run_iter(100000, "last", "last")
+run_iter(100000, "middle", "middle")
