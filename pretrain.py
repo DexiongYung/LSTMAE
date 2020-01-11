@@ -176,6 +176,6 @@ learning_rate = 0.0005
 enc_optim = torch.optim.Adam(enc.parameters(),lr=0.001)
 dec_optim = torch.optim.Adam(dec.parameters(),lr=0.001)
 
-run_iter(100000, "first", "first")
-run_iter(100000, "last", "last")
-run_iter(100000, "middle", "middle")
+run_iter(10000000, "first", "first")
+run_iter(10000000, "last", "last")
+run_iter(10000000, "middle", "middle")
