@@ -131,7 +131,7 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
     start = time.time()
     n_iters = len(df)
 
-    for e in epochs:
+    for e in range(epochs):
         for iter in range(n_iters):
             input = df.iloc[iter][column]
             name, noisy_name, loss = denoise_train(input)
