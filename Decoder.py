@@ -21,7 +21,7 @@ class Decoder(nn.Module):
         # Initialize LSTM - Notice it does not accept output_size
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers)
         self.fc1 = nn.Linear(hidden_size, output_size)
-        self.softmax = nn.Softmax(dim=2)
+        self.softmax = nn.LogSoftmax(dim=2)
 
     def forward(self, input, hidden):
         """

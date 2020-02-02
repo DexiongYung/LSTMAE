@@ -108,8 +108,8 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     total = 0
     correct = 0
     for iter in range(n_iters):
-        input, noised_x = df.iloc[iter][column]
-        name = test(input)
+        input = df.iloc[iter][column]
+        name, noised_x = test(input)
 
         total += 1
 
@@ -144,10 +144,9 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
             if iter % plot_every == 0:
                 all_losses.append(total_loss / plot_every)
                 total_loss = 0
-
-    plot_losses(all_losses) 
-    torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}.path.tar"))
-    torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
+                plot_losses(all_losses) 
+                torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}.path.tar"))
+                torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
 
 
 test_df = pd.read_csv("Data/Train.csv")
