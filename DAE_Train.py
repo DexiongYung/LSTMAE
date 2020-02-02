@@ -70,12 +70,15 @@ def denoise_train(x: str):
 
 
 def test(x: str):
+    noised_x = noise_name(x)
+    noised_x = pad_string(noised_x)
+    noised_x = string_to_tensor(noised_x)
     x = pad_string(x)
     x = string_to_tensor(x)
     encoder_hidden = encoder.init_hidden()
-    for i in range(x.shape[0]):
+    for i in range(noised_x.shape[0]):
         # LSTM requires 3 dimensional inputs
-        _, encoder_hidden = encoder(x[i].unsqueeze(0), encoder_hidden)
+        _, encoder_hidden = encoder(noised_x[i].unsqueeze(0), encoder_hidden)
 
     decoder_input = init_decoder_input()
     decoder_hidden = encoder_hidden
