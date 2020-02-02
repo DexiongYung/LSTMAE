@@ -16,6 +16,8 @@ from Encoder import Encoder
 from Noiser import noise_name
 
 
+PRINTS = 10000
+
 def init_decoder_input():
     decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
     decoder_input[0, 0, char_to_index(SOS)] = 1.
@@ -75,8 +77,8 @@ def denoise_train(x: str):
 
 
 def test(x: str):
-    noised_x = noise_name(x + EOS)
-    noised_x = string_to_tensor(noised_x)
+    noisy_x = noise_name(x)
+    noised_x = string_to_tensor(noisy_x + SOS)
     x = string_to_tensor(x + EOS)
 
     encoder_hidden = encoder.init_hidden()
@@ -97,16 +99,16 @@ def test(x: str):
         decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
         decoder_input[0, 0, best_index] = 1.
 
-    return name
+    return name, noisy_x
 
 
-def iter_test(column: str, df: pd.DataFrame, print_every: int = 5000):
+def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     start = time.time()
     n_iters = len(df)
     total = 0
     correct = 0
     for iter in range(n_iters):
-        input = df.iloc[iter][column]
+        input, noised_x = df.iloc[iter][column]
         name = test(input)
 
         total += 1
@@ -117,13 +119,13 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = 5000):
             correct += 1
 
         if iter % print_every == 0:
-            print(f"Total: {total}, Correct: {correct}, Input: {input}, Name:{name}")
+            print(f"Total: {total}, Correct: {correct}, Input: {noised_x}, Name:{name}, Original:{input}")
 
     print(f"Total: {total}, Correct: {correct}")
     return total, correct
 
 
-def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 100, plot_every: int = 5000):
+def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = PRINTS, plot_every: int = 5000):
     all_losses = []
     total_loss = 0  # Reset every plot_every iters
     start = time.time()
