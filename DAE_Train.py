@@ -36,9 +36,9 @@ def denoise_train(x: str):
 
     loss = 0.
 
-    noised_x = noise_name(x + EOS)
+    noised_x = noise_name(x)
     x = string_to_tensor(x + EOS)
-    noised_x = string_to_tensor(noised_x)
+    noised_x = string_to_tensor(noised_x + EOS)
 
     encoder_hidden = encoder.init_hidden()
 
