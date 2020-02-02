@@ -6,7 +6,7 @@ EOS = '2'
 PAD = '3'
 ALL_CHARS = string.ascii_letters + "'-" + SOS + EOS + PAD
 LETTERS_COUNT = len(ALL_CHARS)
-MAX_LENGTH = 15
+MAX_LENGTH = 18
 
 
 def char_to_index(char: str) -> int:

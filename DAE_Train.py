@@ -36,10 +36,8 @@ def denoise_train(x: str):
 
     loss = 0.
 
-    noised_x = noise_name(x)
-    x = pad_string(x)
-    x = string_to_tensor(x)
-    noised_x = pad_string(noised_x)
+    noised_x = noise_name(x + EOS)
+    x = string_to_tensor(x + EOS)
     noised_x = string_to_tensor(noised_x)
 
     encoder_hidden = encoder.init_hidden()
@@ -50,31 +48,28 @@ def denoise_train(x: str):
 
     decoder_input = init_decoder_input()
     decoder_hidden = encoder_hidden
-    output_char = SOS
     name = ''
 
-    while output_char is not EOS and len(name) < MAX_LENGTH:
+    for i in len(x):
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
-        _, nonzero_indexes = x[len(name)].topk(1)
+        _, nonzero_indexes = x[i].topk(1)
         best_index = torch.argmax(decoder_probs, dim=2).item()
         loss += criterion(decoder_probs[0], nonzero_indexes[0])
-        output_char = ALL_CHARS[best_index]
-        name += output_char
+        name += ALL_CHARS[best_index]
         decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
         decoder_input[0, 0, best_index] = 1.
 
     loss.backward()
     encoder_optim.step()
     decoder_optim.step()
-    return name.replace(PAD, ''), loss.item()
+    return name, loss.item()
 
 
 def test(x: str):
-    noised_x = noise_name(x)
-    noised_x = pad_string(noised_x)
+    noised_x = noise_name(x + EOS)
     noised_x = string_to_tensor(noised_x)
-    x = pad_string(x)
-    x = string_to_tensor(x)
+    x = string_to_tensor(x + EOS)
+    
     encoder_hidden = encoder.init_hidden()
     for i in range(noised_x.shape[0]):
         # LSTM requires 3 dimensional inputs
@@ -93,7 +88,7 @@ def test(x: str):
         decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
         decoder_input[0, 0, best_index] = 1.
 
-    return name.replace(PAD, '')
+    return name
 
 
 def iter_test(column: str, df: pd.DataFrame, print_every: int = 5000):
