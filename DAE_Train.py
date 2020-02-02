@@ -114,7 +114,7 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = 5000):
     return total, correct
 
 
-def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 1, plot_every: int = 500):
+def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 5000, plot_every: int = 5000):
     all_losses = []
     total_loss = 0  # Reset every plot_every iters
     start = time.time()
