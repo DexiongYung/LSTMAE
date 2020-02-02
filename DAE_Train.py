@@ -125,23 +125,26 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     return total, correct
 
 
-def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = PRINTS, plot_every: int = 5000):
+def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "Checkpoints/", print_every: int = PRINTS, plot_every: int = 5000):
     all_losses = []
     total_loss = 0  # Reset every plot_every iters
     start = time.time()
     n_iters = len(df)
-    for iter in range(n_iters):
-        input = df.iloc[iter][column]
-        name, noisy_name, loss = denoise_train(input)
-        total_loss += loss
 
-        if iter % print_every == 0:
-            print('%s (%d %d%%) %.4f' % (timeSince(start), iter, iter / n_iters * 100, loss))
-            print('input: %s, output: %s, original: %s' % (noisy_name, name, input))
+    for e in epochs:
+        for iter in range(n_iters):
+            input = df.iloc[iter][column]
+            name, noisy_name, loss = denoise_train(input)
+            total_loss += loss
 
-        if iter % plot_every == 0:
-            all_losses.append(total_loss / plot_every)
-            total_loss = 0
+            if iter % print_every == 0:
+                print('%s (%d %d%%) %.4f' % (timeSince(start), iter, iter / n_iters * 100, loss))
+                print('input: %s, output: %s, original: %s' % (noisy_name, name, input))
+
+            if iter % plot_every == 0:
+                all_losses.append(total_loss / plot_every)
+                total_loss = 0
+
     plot_losses(all_losses) 
     torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}.path.tar"))
     torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
