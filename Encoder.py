@@ -11,7 +11,7 @@ class Encoder(nn.Module):
     hidden_size: Size of the hidden dimension
     """
 
-    def __init__(self, input_size, hidden_size, num_layers=2):
+    def __init__(self, input_size, hidden_size, num_layers=4):
         super(Encoder, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size

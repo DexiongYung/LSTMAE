@@ -15,7 +15,7 @@ def noise_name(x: str):
         return remove_chars(x)
 
 
-def add_chars(x: str, max_add: int = 3):
+def add_chars(x: str, max_add: int = 2):
     if max_add + len(x) > MAX_LENGTH:
         raise Exception(f"{max_add + len(x)} is greater than max length:{MAX_LENGTH}")
 
@@ -30,9 +30,9 @@ def add_chars(x: str, max_add: int = 3):
     return ret
 
 
-def switch_chars(x: str):
+def switch_chars(x: str, max_switch: int = 2):
     ret = x
-    num_to_switch = randint(0, math.floor(len(x) / 2))
+    num_to_switch = randint(0, min(math.floor(len(x) / 2), max_switch))
 
     for i in range(num_to_switch):
         random_char = ALL_CHARS[randint(0, LETTERS_COUNT - 1)]
@@ -42,9 +42,9 @@ def switch_chars(x: str):
     return ret
 
 
-def remove_chars(x: str):
+def remove_chars(x: str, max_remove: int = 2):
     ret = x
-    num_to_remove = randint(0, math.floor(len(x) / 2))
+    num_to_remove = randint(0, min(math.floor(len(x) / 2), max_remove))
 
     for i in range(num_to_remove):
         pos = randint(0, len(ret) - 1)

@@ -21,6 +21,15 @@ def init_decoder_input():
     decoder_input[0, 0, char_to_index(SOS)] = 1.
     return decoder_input
 
+def plot_losses(loss: list, folder: str = "Result", filename: str = None):
+    x = list(range(len(loss)))
+    plt.plot(x, loss, 'r--', label="Loss")
+    plt.title("Losses")
+    plt.xlabel("Epoch")
+    plt.ylabel("Loss")
+    plt.legend(loc='upper left')
+    plt.savefig(f"{folder}/{date_time}")
+    plt.close()
 
 def timeSince(since):
     now = time.time()
@@ -36,9 +45,9 @@ def denoise_train(x: str):
 
     loss = 0.
 
-    noised_x = noise_name(x)
+    noisy_x = noise_name(x)
     x = string_to_tensor(x + EOS)
-    noised_x = string_to_tensor(noised_x + EOS)
+    noised_x = string_to_tensor(noisy_x + EOS)
 
     encoder_hidden = encoder.init_hidden()
 
@@ -62,7 +71,7 @@ def denoise_train(x: str):
     loss.backward()
     encoder_optim.step()
     decoder_optim.step()
-    return name, loss.item()
+    return name, noisy_x, loss.item()
 
 
 def test(x: str):
@@ -102,49 +111,52 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = 5000):
 
         total += 1
 
+        name = name.replace(EOS, '')
+
         if input == name:
             correct += 1
 
         if iter % print_every == 0:
-            print(f"Total: {total}, Correct: {correct}")
+            print(f"Total: {total}, Correct: {correct}, Input: {input}, Name:{name}")
 
     print(f"Total: {total}, Correct: {correct}")
     return total, correct
 
 
-def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 5000, plot_every: int = 5000):
+def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 100, plot_every: int = 5000):
     all_losses = []
     total_loss = 0  # Reset every plot_every iters
     start = time.time()
     n_iters = len(df)
     for iter in range(n_iters):
         input = df.iloc[iter][column]
-        name, loss = denoise_train(input)
+        name, noisy_name, loss = denoise_train(input)
         total_loss += loss
 
         if iter % print_every == 0:
             print('%s (%d %d%%) %.4f' % (timeSince(start), iter, iter / n_iters * 100, loss))
-            print('input: %s, output: %s' % (input, name))
+            print('input: %s, output: %s, original: %s' % (noisy_name, name, input))
 
         if iter % plot_every == 0:
             all_losses.append(total_loss / plot_every)
             total_loss = 0
 
-    current_DT = datetime.datetime.now()
-    date_time = current_DT.strftime("%Y-%m-%d_%Hhr%Mm")
-    torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}{date_time}"))
+    torch.save({'weights': encoder.state_dict()}, os.path.join(f"encoder_{path}{date_time}.path.tar"))
+    torch.save({'weights': decoder.state_dict()}, os.path.join(f"decoder_{path}{date_time}.path.tar"))
 
 
 test_df = pd.read_csv("Data/Train.csv")
 train_df = pd.read_csv("Data/Test.csv")
 
 hidden_layer_sz = 256
-encoder = Encoder(LETTERS_COUNT, hidden_layer_sz, 1)
+encoder = Encoder(LETTERS_COUNT, hidden_layer_sz)
 decoder = Decoder(LETTERS_COUNT, hidden_layer_sz, LETTERS_COUNT)
 criterion = nn.NLLLoss()
 
-learning_rate = 0.0005
+current_DT = datetime.datetime.now()
+date_time = current_DT.strftime("%Y-%m-%d_%Hhr")
 
+learning_rate = 0.0005
 encoder_optim = torch.optim.Adam(encoder.parameters(), lr=learning_rate)
 decoder_optim = torch.optim.Adam(decoder.parameters(), lr=learning_rate)
 
