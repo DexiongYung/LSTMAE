@@ -142,9 +142,9 @@ def iter_train(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_
         if iter % plot_every == 0:
             all_losses.append(total_loss / plot_every)
             total_loss = 0
-
-    torch.save({'weights': encoder.state_dict()}, os.path.join(f"encoder_{path}{date_time}.path.tar"))
-    torch.save({'weights': decoder.state_dict()}, os.path.join(f"decoder_{path}{date_time}.path.tar"))
+    plot_losses(all_losses) 
+    torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}.path.tar"))
+    torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
 
 
 test_df = pd.read_csv("Data/Train.csv")

@@ -97,9 +97,8 @@ def run_iter(n_iters: int, column: str, path: str = "Checkpoints/", print_every:
             all_losses.append(total_loss / plot_every)
             total_loss = 0
 
-    current_DT = datetime.datetime.now()
-    date_time = current_DT.strftime("%Y-%m-%d_%Hhr%Mm")
-    torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}{date_time}"))
+    torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}"))
+    torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}"))
 
 
 def iter_entire_data(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 5000,
@@ -133,6 +132,9 @@ decoder = Decoder(LETTERS_COUNT, hidden_layer_sz, LETTERS_COUNT)
 criterion = nn.NLLLoss()
 
 learning_rate = 0.0005
+
+current_DT = datetime.datetime.now()
+date_time = current_DT.strftime("%Y-%m-%d_%Hhr")
 
 encoder_optim = torch.optim.Adam(encoder.parameters(), lr=learning_rate)
 decoder_optim = torch.optim.Adam(decoder.parameters(), lr=learning_rate)
