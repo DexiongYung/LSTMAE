@@ -50,7 +50,7 @@ def denoise_train(x: str):
     decoder_hidden = encoder_hidden
     name = ''
 
-    for i in len(x):
+    for i in range(x.shape[0]):
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
         _, nonzero_indexes = x[i].topk(1)
         best_index = torch.argmax(decoder_probs, dim=2).item()
@@ -69,7 +69,7 @@ def test(x: str):
     noised_x = noise_name(x + EOS)
     noised_x = string_to_tensor(noised_x)
     x = string_to_tensor(x + EOS)
-    
+
     encoder_hidden = encoder.init_hidden()
     for i in range(noised_x.shape[0]):
         # LSTM requires 3 dimensional inputs
