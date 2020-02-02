@@ -1,14 +1,15 @@
+import datetime
+import math
+import matplotlib.pyplot as plt
+import os
+import pandas as pd
 import random
+import string
+import time
 import torch
 import torch.nn as nn
 from io import open
-import datetime
-import string
-import matplotlib.pyplot as plt
-import time
-import math
-import os
-import pandas as pd
+
 from Decoder import Decoder
 from Encoder import Encoder
 
@@ -18,22 +19,27 @@ PAD = '3'
 ALL_CHARS = string.ascii_letters + "'-" + SOS + EOS + PAD
 LETTERS_COUNT = len(ALL_CHARS)
 
+
 def char_to_index(char: str) -> int:
     return ALL_CHARS.find(char)
 
+
 def string_to_tensor(string: str) -> list:
-    tensor = torch.zeros(len(string),1,LETTERS_COUNT)
-    for i,char in enumerate(string):
-        tensor[i,0,char_to_index(char)] = 1
+    tensor = torch.zeros(len(string), 1, LETTERS_COUNT)
+    for i, char in enumerate(string):
+        tensor[i, 0, char_to_index(char)] = 1
     return tensor
 
+
 def int_to_tensor(index: int) -> list:
-    tensor = torch.zeros([1, LETTERS_COUNT],dtype=torch.long)
-    tensor[:,index] = 1
+    tensor = torch.zeros([1, LETTERS_COUNT], dtype=torch.long)
+    tensor[:, index] = 1
     return tensor
+
 
 def randomName(data, column: str):
     return data.iloc[random.randint(0, len(data) - 1)][column]
+
 
 def timeSince(since):
     now = time.time()
@@ -41,6 +47,7 @@ def timeSince(since):
     m = math.floor(s / 60)
     s -= m * 60
     return '%dm %ds' % (m, s)
+
 
 def train(x):
     encoder_optim.zero_grad()
@@ -57,7 +64,7 @@ def train(x):
     decoder_input[0, 0, -1] = 1.
     decoder_hidden = encoder_hidden
     name = ''
-    
+
     for i in range(x.shape[0]):
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
         _, nonzero_indexes = x[i].topk(1)
@@ -72,9 +79,10 @@ def train(x):
     decoder_optim.step()
     return name, decoder_probs, loss.item()
 
-def run_iter(n_iters: int, column: str, path: str = "Checkpoints/", print_every: int=5000, plot_every: int = 500):
+
+def run_iter(n_iters: int, column: str, path: str = "Checkpoints/", print_every: int = 5000, plot_every: int = 500):
     all_losses = []
-    total_loss = 0 # Reset every plot_every iters
+    total_loss = 0  # Reset every plot_every iters
     start = time.time()
     for iter in range(1, n_iters + 1):
         input = randomName(df, column)
@@ -88,14 +96,16 @@ def run_iter(n_iters: int, column: str, path: str = "Checkpoints/", print_every:
         if iter % plot_every == 0:
             all_losses.append(total_loss / plot_every)
             total_loss = 0
-    
+
     current_DT = datetime.datetime.now()
     date_time = current_DT.strftime("%Y-%m-%d_%Hhr%Mm")
-    torch.save({'weights':decoder.state_dict()}, os.path.join(f"{path}{date_time}"))
+    torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}{date_time}"))
 
-def iter_entire_data(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 5000, plot_every: int = 500):
+
+def iter_entire_data(column: str, df: pd.DataFrame, path: str = "Checkpoints/", print_every: int = 5000,
+                     plot_every: int = 500):
     all_losses = []
-    total_loss = 0 # Reset every plot_every iters
+    total_loss = 0  # Reset every plot_every iters
     start = time.time()
     n_iters = len(df)
     for iter in range(n_iters):
@@ -110,10 +120,11 @@ def iter_entire_data(column: str, df: pd.DataFrame, path: str = "Checkpoints/", 
         if iter % plot_every == 0:
             all_losses.append(total_loss / plot_every)
             total_loss = 0
-    
+
     current_DT = datetime.datetime.now()
     date_time = current_DT.strftime("%Y-%m-%d_%Hhr%Mm")
-    torch.save({'weights':decoder.state_dict()}, os.path.join(f"{path}{date_time}"))
+    torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}{date_time}"))
+
 
 df = pd.read_csv("Data/Train.csv")
 hidden_layer_sz = 256
@@ -123,7 +134,7 @@ criterion = nn.NLLLoss()
 
 learning_rate = 0.0005
 
-encoder_optim = torch.optim.Adam(encoder.parameters(),lr=learning_rate)
-decoder_optim = torch.optim.Adam(decoder.parameters(),lr=learning_rate)
+encoder_optim = torch.optim.Adam(encoder.parameters(), lr=learning_rate)
+decoder_optim = torch.optim.Adam(decoder.parameters(), lr=learning_rate)
 
 iter_entire_data("name", df)

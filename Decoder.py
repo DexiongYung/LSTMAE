@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 
+
 class Decoder(nn.Module):
     """
     Accept hidden layers as an argument <num_layer x batch_size x hidden_size> for each hidden and cell state.
