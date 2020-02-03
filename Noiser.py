@@ -3,6 +3,7 @@ from random import randint
 
 from Convert import ALL_CHARS, MAX_LENGTH, LETTERS_COUNT
 
+MAX = 2
 
 def noise_name(x: str):
     noise_type = randint(0, 3)
@@ -18,7 +19,7 @@ def noise_name(x: str):
         return add_chars(x)
 
 
-def add_chars(x: str, max_add: int = 2):
+def add_chars(x: str, max_add: int = MAX):
     if max_add + len(x) > MAX_LENGTH:
         raise Exception(f"{max_add + len(x)} is greater than max length:{MAX_LENGTH}")
 
@@ -33,7 +34,7 @@ def add_chars(x: str, max_add: int = 2):
     return ret
 
 
-def switch_chars(x: str, max_switch: int = 2):
+def switch_chars(x: str, max_switch: int = MAX):
     ret = x
     num_to_switch = randint(0, min(math.floor(len(x) / 2), max_switch))
 
@@ -45,7 +46,7 @@ def switch_chars(x: str, max_switch: int = 2):
     return ret
 
 
-def remove_chars(x: str, max_remove: int = 2):
+def remove_chars(x: str, max_remove: int = MAX):
     ret = x
     num_to_remove = randint(0, min(math.floor(len(x) / 2), max_remove))
 
