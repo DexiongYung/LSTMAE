@@ -1,4 +1,5 @@
 import datetime
+import argparse
 import math
 import matplotlib.pyplot as plt
 import os
@@ -15,7 +16,23 @@ from Decoder import Decoder
 from Encoder import Encoder
 from Noiser import noise_name
 
-PRINTS = 10000
+
+parser = argparse.ArgumentParser()
+parser.add_argument('--sess_nm', help='Session name', nargs='?', default="No_Name", type=str)
+parser.add_argument('--hidden_sz', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
+parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.0005, type=float)
+parser.add_argument('--batch_sz', help='Size of the batch training on', nargs='?', default=2048, type=int)
+parser.add_argument('--epochs', help='Number of epochs', nargs='?', default=2000, type=int)
+parser.add_argument('--prints', help='Number of iterations to count', nargs="?", default=5000, type=int)
+parser.add_argument('--train_csv', help="Path of the train csv file", nargs="?", default="Data/Train.csv", type=str)
+parser.add_argument('--test_csv', help="Path of the test csv file", nargs="?", default="Data/Test.csv", type=str)
+
+args = parser.parse_args()
+PRINTS = args.prints
+LR = args.lr
+HIDD_LAYER_SZ = args.hidden_sz
+TRAIN_PATH = args.train_csv
+TEST_PATH = args.test_csv
 
 
 def init_decoder_input():
@@ -199,20 +216,18 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
                 torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
 
 
-test_df = pd.read_csv("Data/Train.csv")
-train_df = pd.read_csv("Data/Test.csv")
+test_df = pd.read_csv(TRAIN_PATH)
+train_df = pd.read_csv(TEST_PATH)
 
-hidden_layer_sz = 256
-encoder = Encoder(LETTERS_COUNT, hidden_layer_sz)
-decoder = Decoder(LETTERS_COUNT, hidden_layer_sz, LETTERS_COUNT)
+encoder = Encoder(LETTERS_COUNT, HIDD_LAYER_SZ)
+decoder = Decoder(LETTERS_COUNT, HIDD_LAYER_SZ, LETTERS_COUNT)
 criterion = nn.NLLLoss()
 
 current_DT = datetime.datetime.now()
 date_time = current_DT.strftime("%Y-%m-%d_%Hhr")
 
-learning_rate = 0.0005
-encoder_optim = torch.optim.Adam(encoder.parameters(), lr=learning_rate)
-decoder_optim = torch.optim.Adam(decoder.parameters(), lr=learning_rate)
+encoder_optim = torch.optim.Adam(encoder.parameters(), lr=LR)
+decoder_optim = torch.optim.Adam(decoder.parameters(), lr=LR)
 
 iter_train("name", train_df)
 iter_test("name", test_df)
