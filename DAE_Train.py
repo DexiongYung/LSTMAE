@@ -101,6 +101,29 @@ def test(x: str):
 
     return name, noisy_x
 
+def test_no_noise(x: str):
+    x = string_to_tensor(x + EOS)
+
+    encoder_hidden = encoder.init_hidden()
+    for i in range(x.shape[0]):
+        # LSTM requires 3 dimensional inputs
+        _, encoder_hidden = encoder(x[i].unsqueeze(0), encoder_hidden)
+
+    decoder_input = init_decoder_input()
+    decoder_hidden = encoder_hidden
+    output_char = SOS
+    name = ''
+
+    while output_char is not EOS and len(name) <= MAX_LENGTH:
+        decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
+        best_index = torch.argmax(decoder_probs, dim=2).item()
+        output_char = ALL_CHARS[best_index]
+        name += output_char
+        decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
+        decoder_input[0, 0, best_index] = 1.
+
+    return name
+
 
 def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     start = time.time()
@@ -120,6 +143,28 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
 
         if iter % print_every == 0:
             print(f"Total: {total}, Correct: {correct}, Input: {noised_x}, Name:{name}, Original:{input}")
+
+    print(f"Total: {total}, Correct: {correct}")
+    return total, correct
+
+def iter_test_no_noise(column: str, df: pd.DataFrame, print_every: int = PRINTS):
+    start = time.time()
+    n_iters = len(df)
+    total = 0
+    correct = 0
+    for iter in range(n_iters):
+        input = df.iloc[iter][column]
+        name = test_no_noise(input)
+
+        total += 1
+
+        name = name.replace(EOS, '')
+
+        if input == name:
+            correct += 1
+
+        if iter % print_every == 0:
+            print(f"Total: {total}, Correct: {correct}, Input: {input}, Output:{name}")
 
     print(f"Total: {total}, Correct: {correct}")
     return total, correct
