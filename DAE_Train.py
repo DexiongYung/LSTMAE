@@ -15,13 +15,14 @@ from Decoder import Decoder
 from Encoder import Encoder
 from Noiser import noise_name
 
-
 PRINTS = 10000
+
 
 def init_decoder_input():
     decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
     decoder_input[0, 0, char_to_index(SOS)] = 1.
     return decoder_input
+
 
 def plot_losses(loss: list, folder: str = "Result", filename: str = None):
     x = list(range(len(loss)))
@@ -32,6 +33,7 @@ def plot_losses(loss: list, folder: str = "Result", filename: str = None):
     plt.legend(loc='upper left')
     plt.savefig(f"{folder}/{date_time}")
     plt.close()
+
 
 def timeSince(since):
     now = time.time()
@@ -101,6 +103,7 @@ def test(x: str):
 
     return name, noisy_x
 
+
 def test_no_noise(x: str):
     x = string_to_tensor(x + EOS)
 
@@ -147,6 +150,7 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     print(f"Total: {total}, Correct: {correct}")
     return total, correct
 
+
 def iter_test_no_noise(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     start = time.time()
     n_iters = len(df)
@@ -170,7 +174,8 @@ def iter_test_no_noise(column: str, df: pd.DataFrame, print_every: int = PRINTS)
     return total, correct
 
 
-def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "Checkpoints/", print_every: int = PRINTS, plot_every: int = PRINTS):
+def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "Checkpoints/", print_every: int = PRINTS,
+               plot_every: int = PRINTS):
     all_losses = []
     total_loss = 0  # Reset every plot_every iters
     start = time.time()
@@ -189,7 +194,7 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
             if iter % plot_every == 0:
                 all_losses.append(total_loss / plot_every)
                 total_loss = 0
-                plot_losses(all_losses) 
+                plot_losses(all_losses)
                 torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}.path.tar"))
                 torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
 
