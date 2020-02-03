@@ -5,14 +5,17 @@ from Convert import ALL_CHARS, MAX_LENGTH, LETTERS_COUNT
 
 
 def noise_name(x: str):
-    noise_type = randint(0, 2)
+    noise_type = randint(0, 3)
 
     if noise_type == 0:
         return add_chars(x)
     elif noise_type == 1:
         return switch_chars(x)
-    else:
+    elif 2:
         return remove_chars(x)
+    else:
+        x = remove_chars(x)
+        return add_chars(x)
 
 
 def add_chars(x: str, max_add: int = 2):
