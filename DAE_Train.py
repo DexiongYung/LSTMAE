@@ -22,9 +22,9 @@ parser.add_argument('--sess_nm', help='Session name', nargs='?', default="No_Nam
 parser.add_argument('--hidden_sz', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.0005, type=float)
 parser.add_argument('--batch_sz', help='Size of the batch training on', nargs='?', default=2048, type=int)
-parser.add_argument('--epochs', help='Number of epochs', nargs='?', default=2000, type=int)
+parser.add_argument('--epochs', help='Number of epochs', nargs='?', default=1000, type=int)
 parser.add_argument('--prints', help='Number of iterations to count', nargs="?", default=5000, type=int)
-parser.add_argument('--train_csv', help="Path of the train csv file", nargs="?", default="Data/Train.csv", type=str)
+parser.add_argument('--train_csv', help="Path of the train csv file", nargs="?", default="Data/LN_Train.csv", type=str)
 parser.add_argument('--test_csv', help="Path of the test csv file", nargs="?", default="Data/Test.csv", type=str)
 
 args = parser.parse_args()
@@ -66,7 +66,7 @@ def denoise_train(x: str):
 
     loss = 0.
 
-    noisy_x = noise_name(x)
+    noisy_x = noise_name(x, ALL_CHARS)
     x = string_to_tensor(x + EOS)
     noised_x = string_to_tensor(noisy_x + EOS)
 
@@ -96,7 +96,7 @@ def denoise_train(x: str):
 
 
 def test(x: str):
-    noisy_x = noise_name(x)
+    noisy_x = noise_name(x, ALL_CHARS)
     noised_x = string_to_tensor(noisy_x + SOS)
     x = string_to_tensor(x + EOS)
 
@@ -216,18 +216,16 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
                 torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
 
 
-test_df = pd.read_csv(TRAIN_PATH)
-train_df = pd.read_csv(TEST_PATH)
+train_df = pd.read_csv(TRAIN_PATH)
 
 encoder = Encoder(LETTERS_COUNT, HIDD_LAYER_SZ)
 decoder = Decoder(LETTERS_COUNT, HIDD_LAYER_SZ, LETTERS_COUNT)
 criterion = nn.NLLLoss()
 
 current_DT = datetime.datetime.now()
-date_time = current_DT.strftime("%Y-%m-%d_%Hhr")
+date_time = current_DT.strftime("%Y-%m-%d")
 
 encoder_optim = torch.optim.Adam(encoder.parameters(), lr=LR)
 decoder_optim = torch.optim.Adam(decoder.parameters(), lr=LR)
 
 iter_train("name", train_df)
-iter_test("name", test_df)
