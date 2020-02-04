@@ -1,4 +1,8 @@
 .vscode/
 .idea/
 .idea/workspace.xml
-.idea/workspace.xml
+.idea/modules.xml
+.idea/workspace
+.idea/inspectionProfiles/
+.idea/LSTMAE.iml
+.idea/vcs.xml
