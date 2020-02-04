@@ -17,7 +17,6 @@ from Utilities.Noiser import noise_name
 from Models.Decoder import Decoder
 from Models.Encoder import Encoder
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--sess_nm', help='Session name', nargs='?', default="No_Name", type=str)
 parser.add_argument('--hidden_sz', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
@@ -47,6 +46,7 @@ def init_decoder_input():
     decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
     decoder_input[0, 0, char_to_index(SOS, ALL_CHARS)] = 1.
     return decoder_input
+
 
 def denoise_train(x: str):
     encoder_optim.zero_grad()

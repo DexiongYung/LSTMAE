@@ -17,7 +17,6 @@ from Utilities.Noiser import noise_name
 from Models.Decoder import Decoder
 from Models.Encoder import Encoder
 
-
 parser = argparse.ArgumentParser()
 parser.add_argument('--sess_nm', help='Session name', nargs='?', default="No_Name", type=str)
 parser.add_argument('--hidden_sz', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
@@ -43,10 +42,12 @@ LETTERS_COUNT = len(ALL_CHARS)
 MAX_LENGTH = 50
 MAX_NOISE = 5
 
+
 def init_decoder_input():
     decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
     decoder_input[0, 0, char_to_index(SOS, ALL_CHARS)] = 1.
     return decoder_input
+
 
 def denoise_train(x: str):
     encoder_optim.zero_grad()
@@ -84,7 +85,7 @@ def denoise_train(x: str):
 
 
 def test(x: str):
-    noisy_x = noise_name(x, ALL_CHARS, MAX_LENGTH, max_length= MAX_NOISE)
+    noisy_x = noise_name(x, ALL_CHARS, MAX_LENGTH, max_length=MAX_NOISE)
     noised_x = string_to_tensor(noisy_x + SOS, ALL_CHARS)
     x = string_to_tensor(x + EOS, ALL_CHARS)
 
@@ -200,8 +201,10 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
                 all_losses.append(total_loss / plot_every)
                 total_loss = 0
                 plot_losses(all_losses, "full_name" + date_time)
-                torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}fullname_encoder_{date_time}.path.tar"))
-                torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}fullname_decoder_{date_time}.path.tar"))
+                torch.save({'weights': encoder.state_dict()},
+                           os.path.join(f"{path}fullname_encoder_{date_time}.path.tar"))
+                torch.save({'weights': decoder.state_dict()},
+                           os.path.join(f"{path}fullname_decoder_{date_time}.path.tar"))
 
 
 train_df = pd.read_csv(TRAIN_PATH)

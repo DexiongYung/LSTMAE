@@ -2,6 +2,7 @@ import matplotlib.pyplot as plt
 import math
 import time
 
+
 def plot_losses(loss: list, date_time: str, folder: str = "Result", filename: str = None):
     x = list(range(len(loss)))
     plt.plot(x, loss, 'r--', label="Loss")
