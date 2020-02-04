@@ -1,20 +1,21 @@
 import datetime
 import argparse
 import math
-import matplotlib.pyplot as plt
 import os
 import pandas as pd
 import random
-import time
 import torch
 import torch.nn as nn
 from io import open
+import string
+import time
 
-from Convert import string_to_tensor, pad_string, int_to_tensor, MAX_LENGTH, ALL_CHARS, LETTERS_COUNT, char_to_index, \
-    SOS, EOS, PAD
-from Decoder import Decoder
-from Encoder import Encoder
-from Noiser import noise_name
+from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index
+from Utilities.Train_Util import plot_losses, timeSince
+from Utilities.Noiser import noise_name
+
+from Models.Decoder import Decoder
+from Models.Encoder import Encoder
 
 
 parser = argparse.ArgumentParser()
@@ -34,31 +35,18 @@ HIDD_LAYER_SZ = args.hidden_sz
 TRAIN_PATH = args.train_csv
 TEST_PATH = args.test_csv
 
+SOS = '0'
+PAD = '1'
+EOS = '2'
+ALL_CHARS = string.ascii_letters + "\'."
+LETTERS_COUNT = len(ALL_CHARS)
+MAX_LENGTH = 20
+
 
 def init_decoder_input():
     decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
-    decoder_input[0, 0, char_to_index(SOS)] = 1.
+    decoder_input[0, 0, char_to_index(SOS, ALL_CHARS)] = 1.
     return decoder_input
-
-
-def plot_losses(loss: list, folder: str = "Result", filename: str = None):
-    x = list(range(len(loss)))
-    plt.plot(x, loss, 'r--', label="Loss")
-    plt.title("Losses")
-    plt.xlabel("Epoch")
-    plt.ylabel("Loss")
-    plt.legend(loc='upper left')
-    plt.savefig(f"{folder}/{date_time}")
-    plt.close()
-
-
-def timeSince(since):
-    now = time.time()
-    s = now - since
-    m = math.floor(s / 60)
-    s -= m * 60
-    return '%dm %ds' % (m, s)
-
 
 def denoise_train(x: str):
     encoder_optim.zero_grad()
@@ -66,9 +54,9 @@ def denoise_train(x: str):
 
     loss = 0.
 
-    noisy_x = noise_name(x, ALL_CHARS)
-    x = string_to_tensor(x + EOS)
-    noised_x = string_to_tensor(noisy_x + EOS)
+    noisy_x = noise_name(x, ALL_CHARS, MAX_LENGTH)
+    x = string_to_tensor(x + EOS, ALL_CHARS)
+    noised_x = string_to_tensor(noisy_x + EOS, ALL_CHARS)
 
     encoder_hidden = encoder.init_hidden()
 
@@ -96,9 +84,9 @@ def denoise_train(x: str):
 
 
 def test(x: str):
-    noisy_x = noise_name(x, ALL_CHARS)
-    noised_x = string_to_tensor(noisy_x + SOS)
-    x = string_to_tensor(x + EOS)
+    noisy_x = noise_name(x, ALL_CHARS, MAX_LENGTH)
+    noised_x = string_to_tensor(noisy_x + SOS, ALL_CHARS)
+    x = string_to_tensor(x + EOS, ALL_CHARS)
 
     encoder_hidden = encoder.init_hidden()
     for i in range(noised_x.shape[0]):
@@ -122,7 +110,7 @@ def test(x: str):
 
 
 def test_no_noise(x: str):
-    x = string_to_tensor(x + EOS)
+    x = string_to_tensor(x + EOS, ALL_CHARS, ALL_CHARS)
 
     encoder_hidden = encoder.init_hidden()
     for i in range(x.shape[0]):
@@ -211,7 +199,7 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
             if iter % plot_every == 0:
                 all_losses.append(total_loss / plot_every)
                 total_loss = 0
-                plot_losses(all_losses)
+                plot_losses(all_losses, date_time)
                 torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}.path.tar"))
                 torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
 
