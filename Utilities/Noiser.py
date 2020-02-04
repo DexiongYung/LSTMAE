@@ -1,18 +1,19 @@
 import math
 from random import randint
 
+
 def noise_name(x: str, allowed_chars: str, max_length: int, max_noise: int = 2):
     noise_type = randint(0, 3)
 
     if noise_type == 0:
-        return add_chars(x, allowed_chars, max_length, max_add = max_noise)
+        return add_chars(x, allowed_chars, max_length, max_add=max_noise)
     elif noise_type == 1:
-        return switch_chars(x, allowed_chars, max_switch = max_noise)
+        return switch_chars(x, allowed_chars, max_switch=max_noise)
     elif 2:
-        return remove_chars(x, max_remove= max_noise)
+        return remove_chars(x, max_remove=max_noise)
     else:
-        x = remove_chars(x, max_remove= max_noise)
-        return add_chars(x, allowed_chars, max_add= max_noise)
+        x = remove_chars(x, max_remove=max_noise)
+        return add_chars(x, allowed_chars, max_add=max_noise)
 
 
 def add_chars(x: str, allowed_chars: str, max_length: int, max_add: int):
