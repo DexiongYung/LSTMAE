@@ -6,7 +6,7 @@ EOS = '|'
 PAD = '_'
 ALL_CHARS = string.printable
 LETTERS_COUNT = len(ALL_CHARS)
-MAX_LENGTH = 25
+MAX_LENGTH = 60
 
 
 def char_to_index(char: str) -> int:
