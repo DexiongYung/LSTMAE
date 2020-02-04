@@ -212,8 +212,8 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
                 all_losses.append(total_loss / plot_every)
                 total_loss = 0
                 plot_losses(all_losses)
-                torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}encoder_{date_time}.path.tar"))
-                torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}decoder_{date_time}.path.tar"))
+                torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}full_encoder_{date_time}.path.tar"))
+                torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}full_decoder_{date_time}.path.tar"))
 
 
 train_df = pd.read_csv(TRAIN_PATH)
