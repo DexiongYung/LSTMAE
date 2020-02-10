@@ -1,91 +1,130 @@
-import datetime
 import argparse
-import math
+import datetime
 import os
-import pandas as pd
-import random
-import torch
-import torch.nn as nn
-from io import open
 import string
 import time
 
-from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index
-from Utilities.Train_Util import plot_losses, timeSince
-from Utilities.Noiser import noise_name
+import pandas as pd
+import torch
+import torch.nn as nn
+from torch.utils.data import DataLoader
 
+from DataSetUtils.NameDS import NameDataset
 from Models.Decoder import Decoder
 from Models.Encoder import Encoder
+from Utilities.Convert import string_to_tensor, pad_string, char_to_index, strings_to_index_tensor, \
+    to_rnn_tensor, strings_to_tensor, index_to_char
+from Utilities.Noiser import noise_name
+from Utilities.Train_Util import plot_losses
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--sess_nm', help='Session name', nargs='?', default="No_Name", type=str)
 parser.add_argument('--hidden_sz', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.0005, type=float)
-parser.add_argument('--batch_sz', help='Size of the batch training on', nargs='?', default=2048, type=int)
-parser.add_argument('--epochs', help='Number of epochs', nargs='?', default=1000, type=int)
+parser.add_argument('--batch_sz', help='Size of the batch training on', nargs='?', default=5000, type=int)
+parser.add_argument('--epochs', help='Number of epochs', nargs='?', default=2000, type=int)
 parser.add_argument('--prints', help='Number of iterations to count', nargs="?", default=5000, type=int)
+parser.add_argument('--noise_num', help='Number characters to noise', nargs="?", default=2, type=int)
 parser.add_argument('--train_csv', help="Path of the train csv file", nargs="?", default="Data/iid_data.csv", type=str)
-parser.add_argument('--test_csv', help="Path of the test csv file", nargs="?", default="Data/Test.csv", type=str)
+parser.add_argument('--test_csv', help="Path of the test csv file", nargs="?", default="Data/FN_Test.csv", type=str)
+parser.add_argument('--chck_pt_name', help="Name of checkpoint", nargs="?", default="", type=str)
 
 args = parser.parse_args()
 PRINTS = args.prints
 LR = args.lr
-HIDD_LAYER_SZ = args.hidden_sz
-TRAIN_PATH = args.train_csv
-TEST_PATH = args.test_csv
+HIDD_SZ = args.hidden_sz
+TRAIN_PTH = args.train_csv
+TEST_PTH = args.test_csv
+BATCH_SZ = args.batch_sz
+NOISE_CNT = args.noise_num
+EPOCH = args.epochs
+CHCK_PT_NAME = args.chck_pt_name
 
-SOS = '/'
-PAD = '^'
-EOS = ';'
-ALL_CHARS = string.printable
-LETTERS_COUNT = len(ALL_CHARS)
-MAX_LENGTH = 50
-MAX_NOISE = 5
-
-
-def init_decoder_input():
-    decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
-    decoder_input[0, 0, char_to_index(SOS, ALL_CHARS)] = 1.
-    return decoder_input
+PAD = '1'
+SOS = '0'
+ENCODER_CHARS = string.printable
+DECODER_CHARS = string.ascii_letters + "\'.,- " + PAD + SOS
+ENC_CHAR_CNT = len(ENCODER_CHARS)
+DEC_CHAR_CNT = len(DECODER_CHARS)
+MAX_LEN = 50
 
 
-def denoise_train(x: str):
+def denoise_train(x: DataLoader):
     encoder_optim.zero_grad()
     decoder_optim.zero_grad()
 
-    loss = 0.
+    loss = 0
 
-    noisy_x = noise_name(x, ALL_CHARS, MAX_LENGTH, max_noise=MAX_NOISE)
-    x = string_to_tensor(x + EOS, ALL_CHARS)
-    noised_x = string_to_tensor(noisy_x + EOS, ALL_CHARS)
+    padded_x = list(map(lambda s: pad_string(s, MAX_LEN, PAD), x))
+    idx_tens_x = strings_to_index_tensor(padded_x, MAX_LEN, DECODER_CHARS, char_to_index)
 
-    encoder_hidden = encoder.init_hidden()
+    noisy_x = list(map(lambda s: noise_name(s, ENCODER_CHARS, MAX_LEN, NOISE_CNT), x))
+    padded_noisy_x = list(map(lambda s: pad_string(s, MAX_LEN, PAD), noisy_x))
+    idx_tens_noisy_x = strings_to_index_tensor(padded_noisy_x, MAX_LEN, ENCODER_CHARS, char_to_index)
 
-    for i in range(noised_x.shape[0]):
+    rnn_x = to_rnn_tensor(idx_tens_x, DEC_CHAR_CNT)
+    rnn_noisy_x = to_rnn_tensor(idx_tens_noisy_x, ENC_CHAR_CNT)
+
+    encoder_hidden = encoder.init_hidden(batch_size=BATCH_SZ)
+
+    for i in range(rnn_noisy_x.shape[0]):
         # LSTM requires 3 dimensional inputs
-        _, encoder_hidden = encoder(noised_x[i].unsqueeze(0), encoder_hidden)
+        _, encoder_hidden = encoder(rnn_noisy_x[i].unsqueeze(0), encoder_hidden)
 
-    decoder_input = init_decoder_input()
+    decoder_input = strings_to_tensor([SOS] * BATCH_SZ, max_name_len=1, allowed_chars=DECODER_CHARS,
+                                      index_func=char_to_index)
     decoder_hidden = encoder_hidden
-    name = ''
+    names = [''] * BATCH_SZ
 
-    for i in range(x.shape[0]):
+    for i in range(rnn_x.shape[0]):
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
-        _, nonzero_indexes = x[i].topk(1)
-        best_index = torch.argmax(decoder_probs, dim=2).item()
-        loss += criterion(decoder_probs[0], nonzero_indexes[0])
-        name += ALL_CHARS[best_index]
-        decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
-        decoder_input[0, 0, best_index] = 1.
+        nonzero_indexes = idx_tens_x[i]
+        best_indexes = torch.squeeze(torch.argmax(decoder_probs, dim=2), dim=0)
+        decoder_probs = torch.squeeze(decoder_probs, dim=0)
+        best_chars = list(map(lambda idx: index_to_char(int(idx), DECODER_CHARS), best_indexes))
+        loss += criterion(decoder_probs, nonzero_indexes.type(torch.LongTensor))
+
+        for i, char in enumerate(best_chars):
+            names[i] += char
+
+        decoder_input = strings_to_tensor(best_chars, 1, DECODER_CHARS, char_to_index)
 
     loss.backward()
     encoder_optim.step()
     decoder_optim.step()
-    return name, noisy_x, loss.item()
+
+    return names, noisy_x, loss.item()
 
 
-def test(x: str):
-    noisy_x = noise_name(x, ALL_CHARS, MAX_LENGTH, max_length=MAX_NOISE)
+def iterate_train(dl: DataLoader, epochs: int = EPOCH, path: str = "Checkpoints/", print_every: int = PRINTS,
+                  plot_every: int = PRINTS):
+    all_losses = []
+    total_loss = 0  # Reset every plot_every iters
+    start = time.time()
+    iteration = 0
+    
+    for e in range(epochs):
+        dl_iter = iter(dl)
+        x = dl_iter.next()
+        while x is not None:
+            _, _, loss = denoise_train(x)
+            iteration += 1
+            total_loss += loss
+
+            if iteration % plot_every == 0:
+                all_losses.append(total_loss / plot_every)
+                total_loss = 0
+                plot_losses(all_losses, filename=f"{CHCK_PT_NAME}{date_time}")
+                torch.save({'weights': encoder.state_dict()},
+                           os.path.join(f"{path}{CHCK_PT_NAME}encoder_{date_time}.path.tar"))
+                torch.save({'weights': decoder.state_dict()},
+                           os.path.join(f"{path}{CHCK_PT_NAME}decoder_{date_time}.path.tar"))
+
+            x = dl_iter.next()
+
+
+def test_w_noise(x: str):
+    noisy_x = noise_name(x, ALL_CHARS, MAX_LEN)
     noised_x = string_to_tensor(noisy_x + SOS, ALL_CHARS)
     x = string_to_tensor(x + EOS, ALL_CHARS)
 
@@ -99,18 +138,18 @@ def test(x: str):
     output_char = SOS
     name = ''
 
-    while output_char is not EOS and len(name) <= MAX_LENGTH:
+    while output_char is not EOS and len(name) <= MAX_LEN:
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
-        best_index = torch.argmax(decoder_probs, dim=2).item()
-        output_char = ALL_CHARS[best_index]
+        best_indexes = torch.argmax(decoder_probs, dim=2).item()
+        output_char = ALL_CHARS[best_indexes]
         name += output_char
         decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
-        decoder_input[0, 0, best_index] = 1.
+        decoder_input[0, 0, best_indexes] = 1.
 
     return name, noisy_x
 
 
-def test_no_noise(x: str):
+def test_wo_noise(x: str):
     x = string_to_tensor(x + EOS, ALL_CHARS, ALL_CHARS)
 
     encoder_hidden = encoder.init_hidden()
@@ -123,18 +162,18 @@ def test_no_noise(x: str):
     output_char = SOS
     name = ''
 
-    while output_char is not EOS and len(name) <= MAX_LENGTH:
+    while output_char is not EOS and len(name) <= MAX_LEN:
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
-        best_index = torch.argmax(decoder_probs, dim=2).item()
-        output_char = ALL_CHARS[best_index]
+        best_indexes = torch.argmax(decoder_probs, dim=2).item()
+        output_char = ALL_CHARS[best_indexes]
         name += output_char
         decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
-        decoder_input[0, 0, best_index] = 1.
+        decoder_input[0, 0, best_indexes] = 1.
 
     return name
 
 
-def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
+def iterate_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     start = time.time()
     n_iters = len(df)
     total = 0
@@ -145,7 +184,7 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
 
         total += 1
 
-        name = name.replace(EOS, '')
+        name = name.replace(PAD, '')
 
         if input == name:
             correct += 1
@@ -157,18 +196,18 @@ def iter_test(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     return total, correct
 
 
-def iter_test_no_noise(column: str, df: pd.DataFrame, print_every: int = PRINTS):
+def iterate_test_wo_noise(column: str, df: pd.DataFrame, print_every: int = PRINTS):
     start = time.time()
     n_iters = len(df)
     total = 0
     correct = 0
     for iter in range(n_iters):
         input = df.iloc[iter][column]
-        name = test_no_noise(input)
+        name = test_wo_noise(input)
 
         total += 1
 
-        name = name.replace(EOS, '')
+        name = name.replace(PAD, '')
 
         if input == name:
             correct += 1
@@ -180,37 +219,14 @@ def iter_test_no_noise(column: str, df: pd.DataFrame, print_every: int = PRINTS)
     return total, correct
 
 
-def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "Checkpoints/", print_every: int = PRINTS,
-               plot_every: int = PRINTS):
-    all_losses = []
-    total_loss = 0  # Reset every plot_every iters
-    start = time.time()
-    n_iters = len(df)
+train_df = pd.read_csv(TRAIN_PTH)
 
-    for e in range(epochs):
-        for iter in range(n_iters):
-            input = df.iloc[iter][column]
-            name, noisy_name, loss = denoise_train(input)
-            total_loss += loss
+dataset = NameDataset(train_df, 'name')
+dataloader = DataLoader(dataset, batch_size=BATCH_SZ, shuffle=True)
 
-            if iter % print_every == 0:
-                print('%s (%d %d%%) %.4f' % (timeSince(start), iter, iter / n_iters * 100, loss))
-                print('input: %s, output: %s, original: %s' % (noisy_name, name, input))
+encoder = Encoder(ENC_CHAR_CNT, HIDD_SZ)
+decoder = Decoder(DEC_CHAR_CNT, HIDD_SZ, DEC_CHAR_CNT)
 
-            if iter % plot_every == 0:
-                all_losses.append(total_loss / plot_every)
-                total_loss = 0
-                plot_losses(all_losses, "full_name" + date_time)
-                torch.save({'weights': encoder.state_dict()},
-                           os.path.join(f"{path}fullname_encoder_{date_time}.path.tar"))
-                torch.save({'weights': decoder.state_dict()},
-                           os.path.join(f"{path}fullname_decoder_{date_time}.path.tar"))
-
-
-train_df = pd.read_csv(TRAIN_PATH)
-
-encoder = Encoder(LETTERS_COUNT, HIDD_LAYER_SZ)
-decoder = Decoder(LETTERS_COUNT, HIDD_LAYER_SZ, LETTERS_COUNT)
 criterion = nn.NLLLoss()
 
 current_DT = datetime.datetime.now()
@@ -219,4 +235,4 @@ date_time = current_DT.strftime("%Y-%m-%d")
 encoder_optim = torch.optim.Adam(encoder.parameters(), lr=LR)
 decoder_optim = torch.optim.Adam(decoder.parameters(), lr=LR)
 
-iter_train("name", train_df)
+iterate_train(dataloader)
