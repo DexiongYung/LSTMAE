@@ -65,16 +65,18 @@ def denoise_train(x: DataLoader):
     rnn_x = to_rnn_tensor(idx_tens_x, DEC_CHAR_CNT)
     rnn_noisy_x = to_rnn_tensor(idx_tens_noisy_x, ENC_CHAR_CNT)
 
-    encoder_hidden = encoder.init_hidden(batch_size=BATCH_SZ)
+    batch_sz = len(x)
+
+    encoder_hidden = encoder.init_hidden(batch_size=batch_sz)
 
     for i in range(rnn_noisy_x.shape[0]):
         # LSTM requires 3 dimensional inputs
         _, encoder_hidden = encoder(rnn_noisy_x[i].unsqueeze(0), encoder_hidden)
 
-    decoder_input = strings_to_tensor([SOS] * BATCH_SZ, max_name_len=1, allowed_chars=DECODER_CHARS,
+    decoder_input = strings_to_tensor([SOS] * batch_sz, max_name_len=1, allowed_chars=DECODER_CHARS,
                                       index_func=char_to_index)
     decoder_hidden = encoder_hidden
-    names = [''] * BATCH_SZ
+    names = [''] * batch_sz
 
     for i in range(rnn_x.shape[0]):
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
