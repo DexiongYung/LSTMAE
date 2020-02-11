@@ -106,9 +106,7 @@ def iterate_train(dl: DataLoader, epochs: int = EPOCH, path: str = "Checkpoints/
     iteration = 0
     
     for e in range(epochs):
-        dl_iter = iter(dl)
-        x = dl_iter.next()
-        while x is not None:
+        for x in dl:
             _, _, loss = denoise_train(x)
             iteration += 1
             total_loss += loss
