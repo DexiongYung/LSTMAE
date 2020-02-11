@@ -120,8 +120,6 @@ def iterate_train(dl: DataLoader, epochs: int = EPOCH, path: str = "Checkpoints/
                 torch.save({'weights': decoder.state_dict()},
                            os.path.join(f"{path}{CHCK_PT_NAME}decoder_{date_time}.path.tar"))
 
-            x = dl_iter.next()
-
 
 def test_w_noise(x: str):
     noisy_x = noise_name(x, ALL_CHARS, MAX_LEN)
