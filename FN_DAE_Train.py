@@ -56,31 +56,30 @@ def denoise_train(x: DataLoader):
     loss = 0
 
     padded_x = list(map(lambda s: pad_string(s, MAX_LEN, PAD), x))
-    idx_tens_x = strings_to_index_tensor(padded_x, MAX_LEN, DECODER_CHARS, char_to_index)
+    x_idx_tensor = strings_to_index_tensor(padded_x, MAX_LEN, DECODER_CHARS, char_to_index)
 
     noisy_x = list(map(lambda s: noise_name(s, ENCODER_CHARS, MAX_LEN, NOISE_CNT), x))
     padded_noisy_x = list(map(lambda s: pad_string(s, MAX_LEN, PAD), noisy_x))
-    idx_tens_noisy_x = strings_to_index_tensor(padded_noisy_x, MAX_LEN, ENCODER_CHARS, char_to_index)
+    noisy_x_idx_tensor = strings_to_index_tensor(padded_noisy_x, MAX_LEN, ENCODER_CHARS, char_to_index)
 
-    rnn_x = to_rnn_tensor(idx_tens_x, DEC_CHAR_CNT)
-    rnn_noisy_x = to_rnn_tensor(idx_tens_noisy_x, ENC_CHAR_CNT)
+    noisy_rnn_tensor = to_rnn_tensor(noisy_x_idx_tensor, ENC_CHAR_CNT)
 
     batch_sz = len(x)
 
     encoder_hidden = encoder.init_hidden(batch_size=batch_sz)
 
-    for i in range(rnn_noisy_x.shape[0]):
+    for i in range(noisy_rnn_tensor.shape[0]):
         # LSTM requires 3 dimensional inputs
-        _, encoder_hidden = encoder(rnn_noisy_x[i].unsqueeze(0), encoder_hidden)
+        _, encoder_hidden = encoder(noisy_rnn_tensor[i].unsqueeze(0), encoder_hidden)
 
     decoder_input = strings_to_tensor([SOS] * batch_sz, max_name_len=1, allowed_chars=DECODER_CHARS,
                                       index_func=char_to_index)
     decoder_hidden = encoder_hidden
     names = [''] * batch_sz
 
-    for i in range(rnn_x.shape[0]):
+    for i in range(x_idx_tensor.shape[0]):
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
-        nonzero_indexes = idx_tens_x[i]
+        nonzero_indexes = x_idx_tensor[i]
         best_indexes = torch.squeeze(torch.argmax(decoder_probs, dim=2), dim=0)
         decoder_probs = torch.squeeze(decoder_probs, dim=0)
         best_chars = list(map(lambda idx: index_to_char(int(idx), DECODER_CHARS), best_indexes))
