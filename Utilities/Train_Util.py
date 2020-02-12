@@ -3,14 +3,14 @@ import math
 import time
 
 
-def plot_losses(loss: list, date_time: str, folder: str = "Result", filename: str = None):
+def plot_losses(loss: list, folder: str = "Result", filename: str = None):
     x = list(range(len(loss)))
     plt.plot(x, loss, 'r--', label="Loss")
     plt.title("Losses")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
     plt.legend(loc='upper left')
-    plt.savefig(f"{folder}/{date_time}")
+    plt.savefig(f"{folder}/{filename}")
     plt.close()
 
 
