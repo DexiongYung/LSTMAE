@@ -4,7 +4,7 @@ from torch.utils.data import Dataset
 
 class NameDataset(Dataset):
     def __init__(self, df: DataFrame, col_name: str):
-        self.data_frame = df[col_name].apply(lambda x: ''.join([" " if ord(i) < 32 or ord(i) > 126 else i for i in x]))
+        self.data_frame = df[col_name].str.lower()
 
     def __len__(self):
         return len(self.data_frame)

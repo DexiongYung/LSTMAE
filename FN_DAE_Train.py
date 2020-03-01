@@ -130,7 +130,7 @@ def test_w_noise(x: str):
         # LSTM requires 3 dimensional inputs
         _, encoder_hidden = encoder(noised_x[i].unsqueeze(0), encoder_hidden)
 
-    decoder_input = init_decoder_input()
+    decoder_input = strings_to_tensor([SOS], 1, DECODER_CHARS, char_to_index)
     decoder_hidden = encoder_hidden
     output_char = SOS
     name = ''
@@ -147,24 +147,25 @@ def test_w_noise(x: str):
 
 
 def test_wo_noise(x: str):
-    x = string_to_tensor(x + EOS, ALL_CHARS, ALL_CHARS)
+    padded_x = pad_string(x, MAX_LEN, PAD)
+    x = string_to_tensor(padded_x, ENCODER_CHARS)
 
     encoder_hidden = encoder.init_hidden()
     for i in range(x.shape[0]):
         # LSTM requires 3 dimensional inputs
         _, encoder_hidden = encoder(x[i].unsqueeze(0), encoder_hidden)
 
-    decoder_input = init_decoder_input()
+    decoder_input = strings_to_tensor([SOS] * 1, max_name_len=1, allowed_chars=DECODER_CHARS,
+                                      index_func=char_to_index)
     decoder_hidden = encoder_hidden
-    output_char = SOS
     name = ''
 
-    while output_char is not EOS and len(name) <= MAX_LEN:
+    while len(name) <= MAX_LEN:
         decoder_probs, decoder_hidden = decoder(decoder_input, decoder_hidden)
         best_indexes = torch.argmax(decoder_probs, dim=2).item()
-        output_char = ALL_CHARS[best_indexes]
+        output_char = DECODER_CHARS[best_indexes]
         name += output_char
-        decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
+        decoder_input = torch.zeros(1, 1, DEC_CHAR_CNT)
         decoder_input[0, 0, best_indexes] = 1.
 
     return name
@@ -224,12 +225,18 @@ dataloader = DataLoader(dataset, batch_size=BATCH_SZ, shuffle=True)
 encoder = Encoder(ENC_CHAR_CNT, HIDD_SZ)
 decoder = Decoder(DEC_CHAR_CNT, HIDD_SZ, DEC_CHAR_CNT)
 
-criterion = nn.NLLLoss()
+# criterion = nn.NLLLoss()
 
-current_DT = datetime.datetime.now()
-date_time = current_DT.strftime("%Y-%m-%d")
+# current_DT = datetime.datetime.now()
+# date_time = current_DT.strftime("%Y-%m-%d")
 
-encoder_optim = torch.optim.Adam(encoder.parameters(), lr=LR)
-decoder_optim = torch.optim.Adam(decoder.parameters(), lr=LR)
+# encoder_optim = torch.optim.Adam(encoder.parameters(), lr=LR)
+# decoder_optim = torch.optim.Adam(decoder.parameters(), lr=LR)
 
-iterate_train(dataloader)
+# iterate_train(dataloader)
+
+
+encoder.load_state_dict(torch.load("Checkpoints/encoder_2020-02-11.path.tar")['weights'])
+decoder.load_state_dict(torch.load("Checkpoints/decoder_2020-02-11.path.tar")['weights'])
+
+print(test_wo_noise("Frank Wood"))
