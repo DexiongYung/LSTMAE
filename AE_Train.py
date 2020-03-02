@@ -8,10 +8,9 @@ import string
 import time
 import torch
 import torch.nn as nn
-from io import open
-
 from Decoder import Decoder
 from Encoder import Encoder
+from io import open
 
 SOS = '1'
 EOS = '2'

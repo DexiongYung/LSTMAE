@@ -1,10 +1,9 @@
 import argparse
 import datetime
 import os
+import pandas as pd
 import string
 import time
-
-import pandas as pd
 import torch
 import torch.nn as nn
 from torch.utils.data import DataLoader
@@ -23,7 +22,8 @@ parser.add_argument('--hidden_sz', help='Size of the hidden layer of LSTM', narg
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.0005, type=float)
 parser.add_argument('--batch_sz', help='Size of the batch training on', nargs='?', default=5000, type=int)
 parser.add_argument('--epochs', help='Number of epochs', nargs='?', default=2000, type=int)
-parser.add_argument('--prints', help='Number of batch iterations before print and plot/weight save', nargs="?", default=5, type=int)
+parser.add_argument('--prints', help='Number of batch iterations before print and plot/weight save', nargs="?",
+                    default=5, type=int)
 parser.add_argument('--noise_num', help='Number characters to noise', nargs="?", default=2, type=int)
 parser.add_argument('--train_csv', help="Path of the train csv file", nargs="?", default="Data/FN_Train.csv", type=str)
 parser.add_argument('--test_csv', help="Path of the test csv file", nargs="?", default="Data/FN_Test.csv", type=str)
@@ -103,7 +103,7 @@ def iterate_train(dl: DataLoader, epochs: int = EPOCH, path: str = "Checkpoints/
     total_loss = 0  # Reset every plot_every iters
     start = time.time()
     iteration = 0
-    
+
     for e in range(epochs):
         for x in dl:
             _, _, loss = denoise_train(x)

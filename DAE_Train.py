@@ -1,22 +1,23 @@
-import datetime
 import argparse
+import datetime
+import json
 import math
 import os
 import pandas as pd
 import random
-import torch
-import torch.nn as nn
-from io import open
 import string
 import time
-from DataSetUtils.NameDS import NameDataset
-from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index
-from Utilities.Train_Util import plot_losses, timeSince
-from Utilities.Noiser import noise_name
-import json
+import torch
+import torch.nn as nn
 from collections import OrderedDict
+from io import open
+
+from DataSetUtils.NameDS import NameDataset
 from Models.Decoder import Decoder
 from Models.Encoder import Encoder
+from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index
+from Utilities.Noiser import noise_name
+from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
@@ -31,7 +32,6 @@ parser.add_argument('--train_file', help='File to train on', nargs='?', default=
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
                     default=False, type=bool)
-
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -95,6 +95,7 @@ def denoise_train(x: str):
     decoder_optim.step()
     return name, noisy_x, loss.item()
 
+
 def train(x: str):
     encoder_optim.zero_grad()
     decoder_optim.zero_grad()
@@ -120,6 +121,7 @@ def train(x: str):
     decoder_optim.step()
     return name, loss.item()
 
+
 def test_rnn():
     decoder_input = init_decoder_input()
     decoder_hidden = decoder.initHidden()
@@ -133,8 +135,9 @@ def test_rnn():
         name += char
         decoder_input = torch.zeros(1, 1, LETTERS_COUNT)
         decoder_input[0, 0, best_index] = 1.
-    
+
     return name
+
 
 def test(x: str):
     noisy_x = noise_name(x, ALL_CHARS, MAX_LENGTH)
@@ -248,9 +251,10 @@ def iter_train(column: str, df: pd.DataFrame, epochs: int = 2000, path: str = "C
             if iter % plot_every == 0:
                 all_losses.append(total_loss / plot_every)
                 total_loss = 0
-                plot_losses(all_losses, filename = date_time)
+                plot_losses(all_losses, filename=date_time)
                 torch.save({'weights': encoder.state_dict()}, os.path.join(f"{path}{NAME}encoder_{date_time}.path.tar"))
                 torch.save({'weights': decoder.state_dict()}, os.path.join(f"{path}{NAME}decoder_{date_time}.path.tar"))
+
 
 def load_json(jsonpath: str) -> dict:
     with open(jsonpath) as jsonfile:
@@ -260,6 +264,7 @@ def load_json(jsonpath: str) -> dict:
 def save_json(jsonpath: str, content):
     with open(jsonpath, 'w') as jsonfile:
         json.dump(content, jsonfile)
+
 
 to_save = {
     'session_name': NAME,
