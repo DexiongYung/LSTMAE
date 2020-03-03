@@ -24,12 +24,11 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--name', help='Name of the Session', nargs='?', default='first_lstm', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
-parser.add_argument('--batch_size', help='Size of the batch training on', nargs='?', default=500, type=int)
 parser.add_argument('--num_epochs', help='Number of epochs', nargs='?', default=1000, type=int)
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
-parser.add_argument('--print', help='Print every', nargs='?', default=25, type=int)
+parser.add_argument('--print', help='Print every', nargs='?', default=1, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
                     default=False, type=bool)
 
@@ -87,7 +86,7 @@ def train(x: str):
 
 def iter_train(column: str, dl: DataLoader, epochs: int = EPOCH, path: str = "Checkpoints/", print_every: int = PRINTS):
     all_losses = []
-    total_loss = 0 
+    total_loss = 0
 
     for e in range(epochs):
         for x in dl:
@@ -103,24 +102,23 @@ def iter_train(column: str, dl: DataLoader, epochs: int = EPOCH, path: str = "Ch
 
 
 def sample():
-    lstm.no_grad()
+    with torch.no_grad():
+        lstm_input = init_lstm_input()
+        lstm_hidden = lstm.initHidden()
+        name = ''
+        char = SOS
+        iter = 0
 
-    lstm_input = init_lstm_input()
-    lstm_hidden = lstm.initHidden()
-    name = ''
-    char = SOS
-    iter = 0
+        while char is not EOS and iter < MAX_LENGTH:
+            iter += 1
+            lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
+            best_index = torch.argmax(lstm_probs, dim=2).item()
+            char = ALL_CHARS[best_index]
+            name += char
+            lstm_input = torch.zeros(1, 1, LETTERS_COUNT)
+            lstm_input[0, 0, best_index] = 1.
 
-    while char is not EOS and iter < MAX_LENGTH:
-        iter += 1
-        lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
-        best_index = torch.argmax(lstm_probs, dim=2).item()
-        char = ALL_CHARS[best_index]
-        name += char
-        lstm_input = torch.zeros(1, 1, LETTERS_COUNT)
-        lstm_input[0, 0, best_index] = 1.
-
-    return name
+        return name
 
 
 def load_json(jsonpath: str) -> dict:
@@ -146,9 +144,9 @@ to_save = {
 
 save_json(f'Config/{NAME}.json', to_save)
 
-train_df = pd.read_csv(TRAIN_FILE)
-train_ds = NameDataset(train_df, "name")
-dl = DataLoader(train_ds, batch_size=1, shuffle=True)
+df = pd.read_csv(TRAIN_FILE)
+ds = NameDataset(df, COLUMN)
+dl = DataLoader(ds, batch_size=1, shuffle=True)
 
 lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
 criterion = nn.NLLLoss()
@@ -156,10 +154,7 @@ criterion = nn.NLLLoss()
 if args.continue_training:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
-current_DT = datetime.datetime.now()
-date_time = current_DT.strftime("%Y-%m-%d")
-
 lstm_optim = torch.optim.Adam(lstm.parameters(), lr=LR)
 lstm.to(DEVICE)
 
-iter_train("name", dl)
+iter_train(COLUMN, dl)
