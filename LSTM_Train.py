@@ -75,7 +75,7 @@ def train(x: str):
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         _, nonzero_indexes = x[i].topk(1)
         best_index = torch.argmax(lstm_probs, dim=2).item()
-        loss += criterion(lstm_probs[0], nonzero_indexes[0])
+        loss += criterion(lstm_probs[0], nonzero_indexes[0].to(DEVICE))
         name += ALL_CHARS[best_index]
         lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
         lstm_input[0, 0, best_index] = 1.
