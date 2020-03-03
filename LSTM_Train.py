@@ -90,8 +90,8 @@ def iter_train(column: str, dl: DataLoader, epochs: int = EPOCH, path: str = "Ch
     iter = 0
 
     for e in range(epochs):
-        iter += 1
         for x in dl:
+	    iter += 1
             input = x[0]
             name, loss = train(input)
             total_loss += loss
