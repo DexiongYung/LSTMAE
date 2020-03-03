@@ -1,11 +1,1 @@
-{
-  "session_name": "last",
-  "hidden_size": 256,
-  "batch_size": 500,
-  "input_size": 30,
-  "output_size": 30,
-  "input": "abcdefghijklmnopqrstuvwxyz'.20",
-  "output": "abcdefghijklmnopqrstuvwxyz'.20",
-  "num_layers": 5,
-  "embed_size": 5
-}
+{"session_name": "Last", "hidden_size": 256, "batch_size": 500, "num_layers": 5, "input_size": 30, "output_size": 30, "input": "abcdefghijklmnopqrstuvwxyz'.20", "output": "abcdefghijklmnopqrstuvwxyz'.20"}

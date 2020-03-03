@@ -75,7 +75,7 @@ def train(x: str):
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         _, nonzero_indexes = x[i].topk(1)
         best_index = torch.argmax(lstm_probs, dim=2).item()
-        loss += criterion(lstm_probs[0], nonzero_indexes[0])
+        loss += criterion(lstm_probs[0], nonzero_indexes[0].to(DEVICE))
         name += ALL_CHARS[best_index]
         lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
         lstm_input[0, 0, best_index] = 1.
@@ -138,13 +138,10 @@ def save_json(jsonpath: str, content):
 
 to_save = {
     'session_name': NAME,
-    'hidden_size': args.hidden_size,
-    'batch_size': args.batch_size,
+    'hidden_size': HIDDEN_SZ,
     'num_layers': NUM_LAYERS,
-    'input_size': len(ALL_CHARS),
-    'output_size': len(ALL_CHARS),
-    'input': ALL_CHARS,
-    'output': ALL_CHARS,
+    'input_size/output': LETTER_COUNT,
+    'input/output': ALL_CHARS
 }
 
 save_json(f'Config/{NAME}.json', to_save)
