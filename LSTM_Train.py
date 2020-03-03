@@ -138,13 +138,10 @@ def save_json(jsonpath: str, content):
 
 to_save = {
     'session_name': NAME,
-    'hidden_size': args.hidden_size,
-    'batch_size': args.batch_size,
+    'hidden_size': HIDDEN_SZ,
     'num_layers': NUM_LAYERS,
-    'input_size': len(ALL_CHARS),
-    'output_size': len(ALL_CHARS),
-    'input': ALL_CHARS,
-    'output': ALL_CHARS,
+    'input_size/output': LETTER_COUNT,
+    'input/output': ALL_CHARS
 }
 
 save_json(f'Config/{NAME}.json', to_save)
