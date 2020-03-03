@@ -137,7 +137,7 @@ to_save = {
     'session_name': NAME,
     'hidden_size': HIDDEN_SZ,
     'num_layers': NUM_LAYERS,
-    'input_size/output': LETTER_COUNT,
+    'input_size/output': LETTERS_COUNT,
     'input/output': ALL_CHARS
 }
 
@@ -149,6 +149,9 @@ dl = DataLoader(train_ds, batch_size=1, shuffle=True)
 
 lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
 criterion = nn.NLLLoss()
+
+if args.continue_training:
+    lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
 current_DT = datetime.datetime.now()
 date_time = current_DT.strftime("%Y-%m-%d")
