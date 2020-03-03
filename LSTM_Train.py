@@ -51,12 +51,13 @@ EOS = '2'
 ALL_CHARS = string.ascii_lowercase + "\'." + EOS + SOS
 LETTERS_COUNT = len(ALL_CHARS)
 MAX_LENGTH = 20
+DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def init_lstm_input():
     lstm_input = torch.zeros(1, 1, LETTERS_COUNT)
     lstm_input[0, 0, char_to_index(SOS, ALL_CHARS)] = 1.
-    return lstm_input
+    return lstm_input.to(DEVICE)
 
 
 def train(x: str):
@@ -67,6 +68,7 @@ def train(x: str):
     x = string_to_tensor(x + EOS, ALL_CHARS)
     lstm_input = init_lstm_input()
     lstm_hidden = lstm.initHidden()
+    lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
     name = ''
 
     for i in range(x.shape[0]):
@@ -75,7 +77,7 @@ def train(x: str):
         best_index = torch.argmax(lstm_probs, dim=2).item()
         loss += criterion(lstm_probs[0], nonzero_indexes[0])
         name += ALL_CHARS[best_index]
-        lstm_input = torch.zeros(1, 1, LETTERS_COUNT)
+        lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
         lstm_input[0, 0, best_index] = 1.
 
     loss.backward()
@@ -158,5 +160,6 @@ current_DT = datetime.datetime.now()
 date_time = current_DT.strftime("%Y-%m-%d")
 
 lstm_optim = torch.optim.Adam(lstm.parameters(), lr=LR)
+lstm.to(DEVICE)
 
 iter_train("name", dl)
