@@ -138,7 +138,10 @@ to_save = {
     'hidden_size': HIDDEN_SZ,
     'num_layers': NUM_LAYERS,
     'input_size/output': LETTERS_COUNT,
-    'input/output': ALL_CHARS
+    'input/output': ALL_CHARS,
+    'EOS_idx': EOS,
+    'SOS_idx': SOS,
+    'PAD_idx': PAD
 }
 
 save_json(f'Config/{NAME}.json', to_save)
