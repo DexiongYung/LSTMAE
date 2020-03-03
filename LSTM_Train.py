@@ -29,7 +29,7 @@ parser.add_argument('--num_epochs', help='Number of epochs', nargs='?', default=
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
-parser.add_argument('--print', help='Print every', nargs='?', default=500, type=int)
+parser.add_argument('--print', help='Print every', nargs='?', default=25, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
                     default=False, type=bool)
 
@@ -87,22 +87,19 @@ def train(x: str):
 
 def iter_train(column: str, dl: DataLoader, epochs: int = EPOCH, path: str = "Checkpoints/", print_every: int = PRINTS):
     all_losses = []
-    total_loss = 0  # Reset every plot_every iters
-    start = time.time()
-    iter = 0
+    total_loss = 0 
 
     for e in range(epochs):
         for x in dl:
-            iter += 1
             input = x[0]
             name, loss = train(input)
             total_loss += loss
 
-            if iter % print_every == 0:
-                all_losses.append(total_loss / print_every)
-                total_loss = 0
-                plot_losses(all_losses, filename=NAME)
-                torch.save({'weights': lstm.state_dict()}, os.path.join(f"{path}{NAME}.path.tar"))
+        if e % print_every == 0:
+            all_losses.append(total_loss / print_every)
+            total_loss = 0
+            plot_losses(all_losses, filename=NAME)
+            torch.save({'weights': lstm.state_dict()}, os.path.join(f"{path}{NAME}.path.tar"))
 
 
 def sample():
