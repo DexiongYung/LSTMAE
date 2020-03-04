@@ -14,6 +14,7 @@ from io import open
 from torch.utils.data import DataLoader
 
 from DataSetUtils.NameDS import NameDataset
+from DataSetUtils.NameCateDL import NameCategoricalDataLoader
 from Models.Decoder import Decoder
 from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index, strings_to_tensor, \
     targetsTensor
@@ -25,7 +26,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--name', help='Name of the Session', nargs='?', default='batch_first_lstm', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
-parser.add_argument('--num_epochs', help='Number of epochs', nargs='?', default=1000, type=int)
+parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=10000, type=int)
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
@@ -37,7 +38,7 @@ parser.add_argument('--continue_training', help='Boolean whether to continue tra
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
 NAME = args.name
-EPOCH = args.num_epochs
+ITER = args.num_iter
 NUM_LAYERS = args.num_layers
 LR = args.lr
 HIDDEN_SZ = args.hidden_size
@@ -89,22 +90,20 @@ def train(x: str):
     return names, loss.item()
 
 
-def iter_train(column: str, dl: DataLoader, epochs: int = EPOCH, path: str = "Checkpoints/", print_every: int = PRINTS):
+def iter_train(column: str, dl: NameCategoricalDataLoader, iterations: int = ITER, path: str = "Checkpoints/", print_every: int = PRINTS):
     all_losses = []
     total_loss = 0
-    iter = 0
 
-    for e in range(epochs):
-        for x in dl:
-            iter += 1
-            name, loss = train(x)
-            total_loss += loss
+    for iter in range(1, iterations + 1):
+        x = dl.sample()
+        name, loss = train(x)
+        total_loss += loss
 
-            if iter % print_every == 0:
-                all_losses.append(total_loss / print_every)
-                total_loss = 0
-                plot_losses(all_losses, filename=NAME)
-                torch.save({'weights': lstm.state_dict()}, os.path.join(f"{path}{NAME}.path.tar"))
+        if iter % print_every == 0:
+            all_losses.append(total_loss / print_every)
+            total_loss = 0
+            plot_losses(all_losses, filename=NAME)
+            torch.save({'weights': lstm.state_dict()}, os.path.join(f"{path}{NAME}.path.tar"))
 
 
 def sample():
@@ -152,8 +151,7 @@ to_save = {
 save_json(f'Config/{NAME}.json', to_save)
 
 df = pd.read_csv(TRAIN_FILE)
-ds = NameDataset(df, COLUMN)
-dl = DataLoader(ds, batch_size=BATCH_SZ, shuffle=True)
+dl = NameCategoricalDataLoader(df, BATCH_SZ)
 
 lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
 criterion = nn.NLLLoss(ignore_index=ALL_CHARS.find(PAD))
