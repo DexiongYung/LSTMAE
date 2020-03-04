@@ -50,7 +50,7 @@ PRINTS = 500
 SOS = '0'
 PAD = '1'
 EOS = '2'
-ALL_CHARS = string.ascii_lowercase + "\'." + EOS + SOS + PAD
+ALL_CHARS = string.ascii_lowercase + "\'-" + EOS + SOS + PAD
 LETTERS_COUNT = len(ALL_CHARS)
 MAX_LENGTH = 20
 
