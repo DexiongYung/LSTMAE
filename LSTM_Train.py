@@ -66,18 +66,17 @@ def train(x: str):
 
     src = string_to_tensor(SOS + x, ALL_CHARS).to(DEVICE)
     trg = targetTensor(x + EOS, ALL_CHARS).to(DEVICE)
-    lstm_input = init_lstm_input()
     lstm_hidden = lstm.initHidden()
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
 
     name = ''
 
     for i in range(src.shape[0]):
+        lstm_input = src[i].unsqueeze(0)
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         loss += criterion(lstm_probs[0], trg[i].unsqueeze(0))
         best_index = torch.argmax(lstm_probs, dim=2).item()
         name += ALL_CHARS[best_index]
-        lstm_input = src[i].unsqueeze(0)
 
     loss.backward()
     lstm_optim.step()
