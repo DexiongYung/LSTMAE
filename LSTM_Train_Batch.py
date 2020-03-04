@@ -103,7 +103,7 @@ def iter_train(column: str, dl: NameCategoricalDataLoader, iterations: int = ITE
         if iter % print_every == 0:
             all_losses.append(total_loss / print_every)
             total_loss = 0
-            plot_losses(all_losses, filename=NAME)
+            plot_losses(all_losses, x_label=f"Iteration of Batch Size: {BATCH_SZ}", y_label="NLLosss", filename=NAME)
             torch.save({'weights': lstm.state_dict()}, os.path.join(f"{path}{NAME}.path.tar"))
 
 
