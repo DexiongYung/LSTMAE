@@ -13,8 +13,8 @@ from collections import OrderedDict
 from io import open
 from torch.utils.data import DataLoader
 
-from DataSetUtils.NameDS import NameDataset
 from DataSetUtils.NameCateDL import NameCategoricalDataLoader
+from DataSetUtils.NameDS import NameDataset
 from Models.Decoder import Decoder
 from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index, strings_to_tensor, \
     targetsTensor
@@ -86,11 +86,12 @@ def train(x: str):
 
     loss.backward()
     lstm_optim.step()
-    
+
     return names, loss.item()
 
 
-def iter_train(column: str, dl: NameCategoricalDataLoader, iterations: int = ITER, path: str = "Checkpoints/", print_every: int = PRINTS):
+def iter_train(column: str, dl: NameCategoricalDataLoader, iterations: int = ITER, path: str = "Checkpoints/",
+               print_every: int = PRINTS):
     all_losses = []
     total_loss = 0
 

@@ -3,7 +3,7 @@ from torch.utils.data import Dataset
 
 
 class NameDataset(Dataset):
-    def __init__(self, df: DataFrame, col_name: str):        
+    def __init__(self, df: DataFrame, col_name: str):
         df = df[df['count'] > 5000]
         self.data_frame = df[col_name].str.lower().dropna()
 
