@@ -33,10 +33,18 @@ def strings_to_tensor(names: list, max_name_len: int, allowed_letters: str):
             tensor[i_char][i_name][allowed_letters.find(letter)] = 1
     return tensor
 
-def targetTensor(name: str, allowed_chars: str, eos: str):
-    letter_indexes = [allowed_chars.find(name[li]) for li in range(1, len(name))]
-    letter_indexes.append(allowed_chars.find(eos)) # EOS
+def targetTensor(name: str, allowed_chars: str):
+    letter_indexes = [allowed_chars.find(name[li]) for li in range(len(name))]
     return torch.LongTensor(letter_indexes)
+
+def targetsTensor(names: list, allowed_chars: str, max_len: int):
+    batch_sz = len(names)
+    ret = torch.zeros(max_len, batch_sz).type(torch.LongTensor)
+    for i in range(max_len):
+        for j in range(batch_sz):
+            ret[i][j] = allowed_chars.find(names[j][i])
+    return ret
+        
 
 def to_rnn_tensor(tensor: Tensor, letter_count: int) -> list:
     """

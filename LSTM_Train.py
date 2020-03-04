@@ -64,8 +64,8 @@ def train(x: str):
 
     loss = 0
 
-    src = string_to_tensor(x, ALL_CHARS).to(DEVICE)
-    trg = targetTensor(x, ALL_CHARS, EOS).to(DEVICE)
+    src = string_to_tensor(SOS + x, ALL_CHARS).to(DEVICE)
+    trg = targetTensor(x + EOS, ALL_CHARS).to(DEVICE)
     lstm_input = init_lstm_input()
     lstm_hidden = lstm.initHidden()
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))

@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 from DataSetUtils.NameDS import NameDataset
 from Models.Decoder import Decoder
-from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index, strings_to_tensor
+from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index, strings_to_tensor, targetsTensor
 from Utilities.Noiser import noise_name
 from Utilities.Train_Util import plot_losses, timeSince
 
@@ -64,31 +64,33 @@ def init_lstm_input(batch_sz: int):
 
 def train(x: str):
     batch_sz = len(x)
-    max_len = len(max(x, key=len)) + 2 # +2 for EOS and SOS
+    max_len = len(max(x, key=len)) + 1 # +1 for EOS xor SOS
 
-    x = list(map(lambda s: (PAD * ((max_len - len(s)) - 2)) + SOS + s + EOS, x))
+    src_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + SOS + s, x))
+    trg_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + s + EOS, x))
 
     lstm_optim.zero_grad()
     loss = 0.
 
-    x = strings_to_tensor(x, max_len, ALL_CHARS).to(DEVICE)
-    lstm_input = x[0]
+    src = strings_to_tensor(src_x, max_len, ALL_CHARS).to(DEVICE)
+    trg = targetsTensor(trg_x, ALL_CHARS, max_len).to(DEVICE)
+
+    lstm_input = init_lstm_input(batch_sz)
     lstm_hidden = lstm.initHidden(batch_sz)
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
+    
     names = [''] * batch_sz
 
-    for i in range(x.shape[0]):
-        lstm_probs, lstm_hidden = lstm(lstm_input.unsqueeze(0), lstm_hidden)
-        _, nonzero_indexes = x[i].topk(1)
+    for i in range(src.shape[0]):
+        lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         best_index = torch.argmax(lstm_probs, dim=2)
-        # If not learning properly probably because of these transposes being the wrong dimension
-        loss += criterion(lstm_probs.transpose(1,2), nonzero_indexes.transpose(0,1).to(DEVICE))
+        loss += criterion(lstm_probs[0], trg[i])
         letters = [''] * batch_sz
 
-        for i in range(len(letters)):
-            letters[i] = ALL_CHARS[best_index[0][i].item()]
+        for idx in range(len(letters)):
+            letters[idx] = ALL_CHARS[best_index[0][idx].item()]
 
-        lstm_input = strings_to_tensor(letters, 1, ALL_CHARS)[0].to(DEVICE)
+        lstm_input = src[i].unsqueeze(0).to(DEVICE)
 
     loss.backward()
     lstm_optim.step()
