@@ -30,6 +30,7 @@ parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
+parser.add_argument('--batch', help='Batch size', nargs='?', default=256, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
                     default=True, type=bool)
 
@@ -41,16 +42,18 @@ NUM_LAYERS = args.num_layers
 LR = args.lr
 HIDDEN_SZ = args.hidden_size
 TRAIN_FILE = args.train_file
+BATCH_SZ = args.batch
 COLUMN = args.column
 PRINTS = args.print
 CLIP = 1
 
+# Global variables
 SOS = '0'
 PAD = '1'
 EOS = '2'
 ALL_CHARS = string.ascii_lowercase + "\'-" + EOS + SOS + PAD
 LETTERS_COUNT = len(ALL_CHARS)
-MAX_LENGTH = 20
+MAX_LENGTH = 10
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
@@ -82,6 +85,7 @@ def train(x: str):
 
     loss.backward()
     lstm_optim.step()
+    
     return names, loss.item()
 
 
@@ -149,7 +153,7 @@ save_json(f'Config/{NAME}.json', to_save)
 
 df = pd.read_csv(TRAIN_FILE)
 ds = NameDataset(df, COLUMN)
-dl = DataLoader(ds, batch_size=256, shuffle=True)
+dl = DataLoader(ds, batch_size=BATCH_SZ, shuffle=True)
 
 lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
 criterion = nn.NLLLoss(ignore_index=ALL_CHARS.find(PAD))
