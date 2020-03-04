@@ -21,7 +21,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='first_lstm', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='Last', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_epochs', help='Number of epochs', nargs='?', default=1000, type=int)
@@ -30,7 +30,7 @@ parser.add_argument('--train_file', help='File to train on', nargs='?', default=
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=5000, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=False, type=bool)
+                    default=True, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -107,6 +107,7 @@ def sample():
     with torch.no_grad():
         lstm_input = init_lstm_input()
         lstm_hidden = lstm.initHidden()
+        lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
         name = ''
         char = SOS
         iter = 0
@@ -117,7 +118,7 @@ def sample():
             best_index = torch.argmax(lstm_probs, dim=2).item()
             char = ALL_CHARS[best_index]
             name += char
-            lstm_input = torch.zeros(1, 1, LETTERS_COUNT)
+            lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
             lstm_input[0, 0, best_index] = 1.
 
         return name
