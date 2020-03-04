@@ -54,15 +54,6 @@ MAX_LENGTH = 20
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
-def init_lstm_input(batch_sz: int):
-    lstm_input = torch.zeros(1, batch_sz, LETTERS_COUNT)
-
-    for idx in range(batch_sz):
-        lstm_input[0, idx, char_to_index(PAD, ALL_CHARS)] = 1.
-
-    return lstm_input.to(DEVICE)
-
-
 def train(x: str):
     batch_sz = len(x)
     max_len = len(max(x, key=len)) + 1  # +1 for EOS xor SOS
@@ -114,7 +105,7 @@ def iter_train(column: str, dl: DataLoader, epochs: int = EPOCH, path: str = "Ch
 
 def sample():
     with torch.no_grad():
-        lstm_input = init_lstm_input(1)
+        lstm_input = string_to_tensor(SOS, ALL_CHARS).to(DEVICE)
         lstm_hidden = lstm.initHidden(1)
         lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
         name = ''
