@@ -69,6 +69,7 @@ def train(x: str):
     lstm_input = init_lstm_input()
     lstm_hidden = lstm.initHidden()
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
+    
     name = ''
 
     for i in range(src.shape[0]):
