@@ -31,7 +31,7 @@ parser.add_argument('--train_file', help='File to train on', nargs='?', default=
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=False, type=bool)
+                    default=True, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -86,10 +86,9 @@ def train(x: str):
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         best_index = torch.argmax(lstm_probs, dim=2)
         loss += criterion(lstm_probs[0], trg[i])
-        letters = [''] * batch_sz
 
-        for idx in range(len(letters)):
-            letters[idx] = ALL_CHARS[best_index[0][idx].item()]
+        for idx in range(len(names)):
+            names[idx] += ALL_CHARS[best_index[0][idx].item()]
 
         lstm_input = src[i].unsqueeze(0).to(DEVICE)
 
