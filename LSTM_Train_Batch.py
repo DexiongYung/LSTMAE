@@ -117,8 +117,9 @@ def iter_train(column: str, dl: DataLoader, epochs: int = EPOCH, path: str = "Ch
 
 def sample():
     with torch.no_grad():
-        lstm_input = init_lstm_input()
-        lstm_hidden = lstm.initHidden()
+        lstm_input = init_lstm_input(1)
+        lstm_hidden = lstm.initHidden(1)
+        lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
         name = ''
         char = SOS
         iter = 0
@@ -129,7 +130,7 @@ def sample():
             best_index = torch.argmax(lstm_probs, dim=2).item()
             char = ALL_CHARS[best_index]
             name += char
-            lstm_input = torch.zeros(1, 1, LETTERS_COUNT)
+            lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
             lstm_input[0, 0, best_index] = 1.
 
         return name
