@@ -49,7 +49,7 @@ PAD = '1'
 EOS = '2'
 ALL_CHARS = string.ascii_lowercase + "\'." + EOS + SOS
 LETTERS_COUNT = len(ALL_CHARS)
-MAX_LENGTH = 20
+MAX_LENGTH = 10
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 

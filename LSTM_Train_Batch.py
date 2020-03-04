@@ -64,7 +64,7 @@ def init_lstm_input(batch_sz: int):
 
 def train(x: str):
     batch_sz = len(x)
-    max_len = len(max(x, key=len)) + 1 # +1 for EOS xor SOS
+    max_len = len(max(x, key=len)) + 1 #+1 for EOS xor SOS
 
     src_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + SOS + s, x))
     trg_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + s + EOS, x))
