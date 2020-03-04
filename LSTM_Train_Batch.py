@@ -32,7 +32,7 @@ parser.add_argument('--column', help='Column header of data', nargs='?', default
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--batch', help='Batch size', nargs='?', default=256, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=True, type=bool)
+                    default=False, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -158,7 +158,7 @@ dl = DataLoader(ds, batch_size=BATCH_SZ, shuffle=True)
 lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
 criterion = nn.NLLLoss(ignore_index=ALL_CHARS.find(PAD))
 
-if args.continue_training:
+if args.continue_training is True:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
 lstm_optim = torch.optim.Adam(lstm.parameters(), lr=LR)
