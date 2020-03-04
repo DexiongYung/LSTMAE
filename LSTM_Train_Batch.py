@@ -15,7 +15,8 @@ from torch.utils.data import DataLoader
 
 from DataSetUtils.NameDS import NameDataset
 from Models.Decoder import Decoder
-from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index, strings_to_tensor, targetsTensor
+from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index, strings_to_tensor, \
+    targetsTensor
 from Utilities.Noiser import noise_name
 from Utilities.Train_Util import plot_losses, timeSince
 
@@ -28,7 +29,7 @@ parser.add_argument('--num_epochs', help='Number of epochs', nargs='?', default=
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
-parser.add_argument('--print', help='Print every', nargs='?', default=5000, type=int)
+parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
                     default=False, type=bool)
 
@@ -55,16 +56,16 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 def init_lstm_input(batch_sz: int):
     lstm_input = torch.zeros(1, batch_sz, LETTERS_COUNT)
-    
+
     for idx in range(batch_sz):
         lstm_input[0, idx, char_to_index(SOS, ALL_CHARS)] = 1.
-    
+
     return lstm_input.to(DEVICE)
 
 
 def train(x: str):
     batch_sz = len(x)
-    max_len = len(max(x, key=len)) + 1 #+1 for EOS xor SOS
+    max_len = len(max(x, key=len)) + 1  # +1 for EOS xor SOS
 
     src_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + SOS + s, x))
     trg_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + s + EOS, x))
@@ -78,7 +79,7 @@ def train(x: str):
     lstm_input = init_lstm_input(batch_sz)
     lstm_hidden = lstm.initHidden(batch_sz)
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
-    
+
     names = [''] * batch_sz
 
     for i in range(src.shape[0]):
@@ -164,7 +165,7 @@ ds = NameDataset(df, COLUMN)
 dl = DataLoader(ds, batch_size=256, shuffle=True)
 
 lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
-criterion = nn.NLLLoss(ignore_index= ALL_CHARS.find(PAD))
+criterion = nn.NLLLoss(ignore_index=ALL_CHARS.find(PAD))
 
 if args.continue_training:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])

@@ -18,6 +18,7 @@ def string_to_tensor(string: str, allowed_chars: str) -> list:
         tensor[i, 0, char_to_index(char, allowed_chars)] = 1
     return tensor
 
+
 def strings_to_tensor(names: list, max_name_len: int, allowed_letters: str):
     """
     Turn a list of name strings into a tensor of one-hot letter vectors
@@ -33,9 +34,11 @@ def strings_to_tensor(names: list, max_name_len: int, allowed_letters: str):
             tensor[i_char][i_name][allowed_letters.find(letter)] = 1
     return tensor
 
+
 def targetTensor(name: str, allowed_chars: str):
     letter_indexes = [allowed_chars.find(name[li]) for li in range(len(name))]
     return torch.LongTensor(letter_indexes)
+
 
 def targetsTensor(names: list, allowed_chars: str, max_len: int):
     batch_sz = len(names)
@@ -44,7 +47,7 @@ def targetsTensor(names: list, allowed_chars: str, max_len: int):
         for j in range(batch_sz):
             ret[i][j] = allowed_chars.find(names[j][i])
     return ret
-        
+
 
 def to_rnn_tensor(tensor: Tensor, letter_count: int) -> list:
     """
