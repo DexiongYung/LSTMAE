@@ -65,7 +65,7 @@ def train(x: str):
     loss = 0
 
     src = string_to_tensor(x, ALL_CHARS).to(DEVICE)
-    trg = targetTensor(x, ALL_CHARS, PAD).to(DEVICE)
+    trg = targetTensor(x, ALL_CHARS, EOS).to(DEVICE)
     lstm_input = init_lstm_input()
     lstm_hidden = lstm.initHidden()
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
@@ -73,8 +73,8 @@ def train(x: str):
 
     for i in range(src.shape[0]):
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
-        best_index = torch.argmax(lstm_probs, dim=2).item()
         loss += criterion(lstm_probs[0], trg[i].unsqueeze(0))
+        best_index = torch.argmax(lstm_probs, dim=2).item()
         name += ALL_CHARS[best_index]
         lstm_input = src[i].unsqueeze(0)
 
