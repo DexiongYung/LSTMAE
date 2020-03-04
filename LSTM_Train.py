@@ -15,7 +15,7 @@ from torch.utils.data import DataLoader
 
 from DataSetUtils.NameDS import NameDataset
 from Models.Decoder import Decoder
-from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index
+from Utilities.Convert import string_to_tensor, pad_string, int_to_tensor, char_to_index, targetTensor
 from Utilities.Noiser import noise_name
 from Utilities.Train_Util import plot_losses, timeSince
 
@@ -62,22 +62,21 @@ def init_lstm_input():
 def train(x: str):
     lstm_optim.zero_grad()
 
-    loss = 0.
+    loss = 0
 
-    x = string_to_tensor(x + EOS, ALL_CHARS)
+    src = string_to_tensor(x, ALL_CHARS).to(DEVICE)
+    trg = targetTensor(x, ALL_CHARS, PAD).to(DEVICE)
     lstm_input = init_lstm_input()
     lstm_hidden = lstm.initHidden()
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
     name = ''
 
-    for i in range(x.shape[0]):
+    for i in range(src.shape[0]):
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
-        _, nonzero_indexes = x[i].topk(1)
         best_index = torch.argmax(lstm_probs, dim=2).item()
-        loss += criterion(lstm_probs[0], nonzero_indexes[0].to(DEVICE))
+        loss += criterion(lstm_probs[0], trg[i].unsqueeze(0))
         name += ALL_CHARS[best_index]
-        lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
-        lstm_input[0, 0, best_index] = 1.
+        lstm_input = src[i].unsqueeze(0)
 
     loss.backward()
     lstm_optim.step()
