@@ -30,9 +30,9 @@ parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
-parser.add_argument('--batch', help='Batch size', nargs='?', default=256, type=int)
+parser.add_argument('--batch', help='Batch size', nargs='?', default=800, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=False, type=bool)
+                    default=True, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
