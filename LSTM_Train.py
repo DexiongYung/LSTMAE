@@ -28,7 +28,7 @@ parser.add_argument('--num_epochs', help='Number of epochs', nargs='?', default=
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
-parser.add_argument('--print', help='Print every', nargs='?', default=5000, type=int)
+parser.add_argument('--print', help='Print every', nargs='?', default=500, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
                     default=True, type=bool)
 
