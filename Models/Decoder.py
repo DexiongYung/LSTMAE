@@ -11,7 +11,7 @@ class Decoder(nn.Module):
     output_size: N_LETTER
     """
 
-    def __init__(self, input_size, hidden_size, output_size, num_layers=4):
+    def __init__(self, input_size: int, hidden_size: int, output_size: int, num_layers: int = 4):
         super(Decoder, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -23,7 +23,7 @@ class Decoder(nn.Module):
         self.fc1 = nn.Linear(hidden_size, output_size)
         self.softmax = nn.LogSoftmax(dim=2)
 
-    def forward(self, input, hidden):
+    def forward(self, input: torch.Tensor, hidden: torch.Tensor):
         """
         Run LSTM through 1 time step
         SHAPE REQUIREMENT

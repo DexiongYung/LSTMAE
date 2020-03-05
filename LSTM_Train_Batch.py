@@ -33,7 +33,7 @@ parser.add_argument('--column', help='Column header of data', nargs='?', default
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--batch', help='Batch size', nargs='?', default=800, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=True, type=bool)
+                    default=False, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -62,8 +62,8 @@ def train(x: str):
     batch_sz = len(x)
     max_len = len(max(x, key=len)) + 1  # +1 for EOS xor SOS
 
-    src_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + SOS + s, x))
-    trg_x = list(map(lambda s: (PAD * ((max_len - len(s)) - 1)) + s + EOS, x))
+    src_x = list(map(lambda s: SOS + s + (PAD * ((max_len - len(s)) - 1)), x))
+    trg_x = list(map(lambda s: s + EOS + (PAD * ((max_len - len(s)) - 1)), x))
 
     lstm_optim.zero_grad()
     loss = 0.
