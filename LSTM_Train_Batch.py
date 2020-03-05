@@ -92,7 +92,7 @@ def train(x: str):
     return names, loss.item()
 
 
-def iter_train(column: str, dl: NameCategoricalDataLoader, iterations: int = ITER, path: str = "Checkpoints/",
+def iter_train(dl: NameCategoricalDataLoader, iterations: int = ITER, path: str = "Checkpoints/",
                print_every: int = PRINTS):
     all_losses = []
     total_loss = 0
@@ -116,17 +116,20 @@ def sample():
         lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
         name = ''
         char = SOS
-        iter = 0
 
-        while char is not EOS and iter < MAX_LENGTH:
-            iter += 1
+        for i in range(MAX_LENGTH):
             lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
-            topv, topi = lstm_probs.topk(1)
-            topi = topi[0][0]
-            char = ALL_CHARS[topi]
+            lstm_probs = torch.softmax(lstm_probs, dim=2)
+            sample = torch.distributions.categorical.Categorical(lstm_probs).sample()
+            sample = sample[0]
+            char = ALL_CHARS[sample]
+
+            if char is EOS:
+                break
+
             name += char
             lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
-            lstm_input[0, 0, topi] = 1.
+            lstm_input[0, 0, sample] = 1.
 
         return name
 
@@ -165,4 +168,4 @@ if args.continue_training is True:
 
 lstm.to(DEVICE)
 
-iter_train('name', dl)
+iter_train(dl)
