@@ -33,7 +33,7 @@ parser.add_argument('--column', help='Column header of data', nargs='?', default
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--batch', help='Batch size', nargs='?', default=800, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=False, type=bool)
+                    default=True, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -65,7 +65,7 @@ def train(x: str):
     src_x = list(map(lambda s: SOS + s + (PAD * ((max_len - len(s)) - 1)), x))
     trg_x = list(map(lambda s: s + EOS + (PAD * ((max_len - len(s)) - 1)), x))
 
-    lstm_optim.zero_grad()
+    lstm.zero_grad()
     loss = 0.
 
     src = strings_to_tensor(src_x, max_len, ALL_CHARS).to(DEVICE)
@@ -85,7 +85,9 @@ def train(x: str):
             names[idx] += ALL_CHARS[best_index[0][idx].item()]
 
     loss.backward()
-    lstm_optim.step()
+    
+    for p in lstm.parameters():
+        p.data.add_(-LR, p.grad.data)
 
     return names, loss.item()
 
@@ -119,11 +121,12 @@ def sample():
         while char is not EOS and iter < MAX_LENGTH:
             iter += 1
             lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
-            best_index = torch.argmax(lstm_probs, dim=2).item()
-            char = ALL_CHARS[best_index]
+            topv, topi = lstm_probs.topk(1)
+            topi = topi[0][0]
+            char = ALL_CHARS[topi]
             name += char
             lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
-            lstm_input[0, 0, best_index] = 1.
+            lstm_input[0, 0, topi] = 1.
 
         return name
 
@@ -160,7 +163,6 @@ criterion = nn.NLLLoss(ignore_index=ALL_CHARS.find(PAD))
 if args.continue_training is True:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
-lstm_optim = torch.optim.Adam(lstm.parameters(), lr=LR)
 lstm.to(DEVICE)
 
-iter_train(COLUMN, dl)
+iter_train('name', dl)
