@@ -65,7 +65,7 @@ def train(x: str):
     src_x = list(map(lambda s: SOS + s + (PAD * ((max_len - len(s)) - 1)), x))
     trg_x = list(map(lambda s: s + EOS + (PAD * ((max_len - len(s)) - 1)), x))
 
-    lstm.zero_grad()
+    optimizer.zero_grad()
     loss = 0.
 
     src = strings_to_tensor(src_x, max_len, ALL_CHARS).to(DEVICE)
@@ -85,6 +85,7 @@ def train(x: str):
             names[idx] += ALL_CHARS[best_index[0][idx].item()]
 
     loss.backward()
+    optimizer.step()
     
     for p in lstm.parameters():
         p.data.add_(-LR, p.grad.data)
@@ -161,11 +162,11 @@ df = pd.read_csv(TRAIN_FILE)
 dl = NameCategoricalDataLoader(df, BATCH_SZ)
 
 lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
+lstm.to(DEVICE)
 criterion = nn.NLLLoss(ignore_index=ALL_CHARS.find(PAD))
+optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 
 if args.continue_training is True:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
-
-lstm.to(DEVICE)
 
 iter_train(dl)
