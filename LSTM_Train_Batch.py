@@ -23,7 +23,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='first', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='batch_first_lstm', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=100000, type=int)
@@ -33,7 +33,7 @@ parser.add_argument('--column', help='Column header of data', nargs='?', default
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--batch', help='Batch size', nargs='?', default=2000, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=False, type=bool)
+                    default=True, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -52,7 +52,7 @@ CLIP = 1
 SOS = '0'
 PAD = '1'
 EOS = '2'
-ALL_CHARS = string.ascii_letters + '\'-' + EOS + SOS + PAD
+ALL_CHARS = string.ascii_lowercase + '\'-' + EOS + SOS + PAD
 LETTERS_COUNT = len(ALL_CHARS)
 MAX_LENGTH = 10
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
@@ -167,6 +167,9 @@ criterion = nn.CrossEntropyLoss(ignore_index=ALL_CHARS.index(PAD))
 optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 
 if args.continue_training is True:
-    lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
+     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
-iter_train(dl)
+# iter_train(dl)
+
+for i in range(10):
+    print(sample())
