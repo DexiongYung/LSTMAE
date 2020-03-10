@@ -1,1 +1,10 @@
-{"session_name": "last", "hidden_size": 256, "num_layers": 5, "input_size/output": 57, "input/output": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'-201", "EOS_idx": "2", "SOS_idx": "0", "PAD_idx": "1"}
+{
+  "session_name": "Last",
+  "hidden_size": 256,
+  "num_layers": 5,
+  "input_size/output": 30,
+  "input/output": "abcdefghijklmnopqrstuvwxyz'.20",
+  "EOS_idx": "2",
+  "SOS_idx": "0",
+  "PAD_idx": "1"
+}
