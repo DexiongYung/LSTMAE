@@ -21,7 +21,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='first_lstm', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='single_fn', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_epochs', help='Number of epochs', nargs='?', default=1000, type=int)
@@ -30,7 +30,7 @@ parser.add_argument('--train_file', help='File to train on', nargs='?', default=
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=500, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=True, type=bool)
+                    default=False, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -45,17 +45,18 @@ PRINTS = args.print
 CLIP = 1
 
 SOS = '0'
-PAD = '1'
 EOS = '2'
-ALL_CHARS = string.ascii_lowercase + "\'-" + EOS + SOS
-LETTERS_COUNT = len(ALL_CHARS)
+INPUT_CHARS = string.ascii_lowercase + "\'-" + SOS
+OUTPUT_CHARS = string.ascii_lowercase + "\'-" + EOS
+INPUT_COUNT = len(INPUT_CHARS)
+OUTPUT_COUNT = len(OUTPUT_CHARS)
 MAX_LENGTH = 10
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
 
 def init_lstm_input():
-    lstm_input = torch.zeros(1, 1, LETTERS_COUNT)
-    lstm_input[0, 0, char_to_index(SOS, ALL_CHARS)] = 1.
+    lstm_input = torch.zeros(1, 1, INPUT_COUNT)
+    lstm_input[0, 0, char_to_index(SOS, INPUT_CHARS)] = 1.
     return lstm_input.to(DEVICE)
 
 
@@ -64,8 +65,8 @@ def train(x: str):
 
     loss = 0
 
-    src = string_to_tensor(SOS + x, ALL_CHARS).to(DEVICE)
-    trg = targetTensor(x + EOS, ALL_CHARS).to(DEVICE)
+    src = string_to_tensor(SOS + x, INPUT_CHARS).to(DEVICE)
+    trg = targetTensor(x + EOS, OUTPUT_CHARS).to(DEVICE)
     lstm_hidden = lstm.initHidden()
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
 
@@ -76,7 +77,7 @@ def train(x: str):
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         loss += criterion(lstm_probs[0], trg[i].unsqueeze(0))
         best_index = torch.argmax(lstm_probs, dim=2).item()
-        name += ALL_CHARS[best_index]
+        name += OUTPUT_CHARS[best_index]
 
     loss.backward()
     lstm_optim.step()
@@ -115,9 +116,9 @@ def sample():
             iter += 1
             lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
             best_index = torch.argmax(lstm_probs, dim=2).item()
-            char = ALL_CHARS[best_index]
+            char = OUTPUT_CHARS[best_index]
             name += char
-            lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
+            lstm_input = torch.zeros(1, 1, OUTPUT_COUNT).to(DEVICE)
             lstm_input[0, 0, best_index] = 1.
 
         return name
@@ -137,11 +138,12 @@ to_save = {
     'session_name': NAME,
     'hidden_size': HIDDEN_SZ,
     'num_layers': NUM_LAYERS,
-    'input_size/output': LETTERS_COUNT,
-    'input/output': ALL_CHARS,
-    'EOS_idx': EOS,
-    'SOS_idx': SOS,
-    'PAD_idx': PAD
+    'input_size': INPUT_COUNT,
+    'output_size': OUTPUT_COUNT,
+    'input': INPUT_CHARS,
+    'output': OUTPUT_CHARS,
+    'out_EOS': EOS,
+    'in_SOS': SOS
 }
 
 save_json(f'Config/{NAME}.json', to_save)
@@ -150,7 +152,7 @@ df = pd.read_csv(TRAIN_FILE)
 ds = NameDataset(df, COLUMN)
 dl = DataLoader(ds, batch_size=1, shuffle=True)
 
-lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
+lstm = Decoder(INPUT_COUNT, HIDDEN_SZ, OUTPUT_COUNT, num_layers=NUM_LAYERS)
 criterion = nn.NLLLoss()
 
 if args.continue_training:

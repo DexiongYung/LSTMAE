@@ -23,7 +23,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='batch_first_lstm', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='Last_Batch', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=100000, type=int)
@@ -120,6 +120,8 @@ def sample():
 
         for i in range(MAX_LENGTH):
             lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
+            lstm_probs[0][0][ALL_CHARS.find(PAD)] = -1000000
+            lstm_probs[0][0][ALL_CHARS.find(SOS)] = -1000000
             lstm_probs = torch.softmax(lstm_probs, dim=2)
             sample = torch.distributions.categorical.Categorical(lstm_probs).sample()
             sample = sample[0]
