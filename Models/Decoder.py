@@ -22,7 +22,7 @@ class Decoder(nn.Module):
         self.lstm = nn.LSTM(input_size, hidden_size, num_layers)
         self.fc1 = nn.Linear(hidden_size, output_size)
         self.dropout = nn.Dropout(drop_out)
-        self.softmax = nn.LogSoftmax(dim=2)
+        self.softmax = nn.Softmax(dim=2)
 
     def forward(self, input: torch.Tensor, hidden: torch.Tensor):
         """

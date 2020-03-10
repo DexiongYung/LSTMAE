@@ -7,7 +7,7 @@ class NameCategoricalDataLoader():
         self.name_hdr = name_header
         self.count_hdr = count_header
         df = df[df[count_header] > min_count]
-        self.data_frame = df[name_header].str.lower().dropna()
+        self.data_frame = df[name_header].dropna()
         self.batch_sz = batch_sz
 
         categories = []
