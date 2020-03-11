@@ -23,7 +23,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='Last_Batch', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='FirstName', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=100000, type=int)
@@ -33,7 +33,7 @@ parser.add_argument('--column', help='Column header of data', nargs='?', default
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--batch', help='Batch size', nargs='?', default=2000, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=True, type=bool)
+                    default=False, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -52,8 +52,10 @@ CLIP = 1
 SOS = '0'
 PAD = '1'
 EOS = '2'
-ALL_CHARS = string.ascii_lowercase + '\'-' + EOS + SOS + PAD
-LETTERS_COUNT = len(ALL_CHARS)
+INPUT_CHARS = string.ascii_lowercase + '\'-' + EOS + SOS + PAD
+INPUT_COUNT = len(INPUT_CHARS)
+OUTPUT_CHARS = string.ascii_lowercase + '\'-' + EOS + PAD
+OUTPUT_COUNT = len(OUTPUT_CHARS)
 MAX_LENGTH = 10
 DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
@@ -68,8 +70,8 @@ def train(x: str):
     optimizer.zero_grad()
     loss = 0.
 
-    src = strings_to_tensor(src_x, max_len, ALL_CHARS).to(DEVICE)
-    trg = targetsTensor(trg_x, ALL_CHARS, max_len).to(DEVICE)
+    src = strings_to_tensor(src_x, max_len, INPUT_CHARS).to(DEVICE)
+    trg = targetsTensor(trg_x, OUTPUT_CHARS, max_len).to(DEVICE)
     lstm_hidden = lstm.initHidden(batch_sz)
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
 
@@ -79,10 +81,10 @@ def train(x: str):
         lstm_input = src[i].unsqueeze(0)
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         best_index = torch.argmax(lstm_probs, dim=2)
-        loss += criterion(lstm_probs[0], trg[i].squeeze(0))
+        loss += criterion(lstm_probs, trg[i])
 
         for idx in range(len(names)):
-            names[idx] += ALL_CHARS[best_index[0][idx].item()]
+            names[idx] += OUTPUT_CHARS[best_index[0][idx].item()]
 
     loss.backward()
     optimizer.step()
@@ -112,7 +114,7 @@ def iter_train(dl: NameCategoricalDataLoader, iterations: int = ITER, path: str 
 
 def sample():
     with torch.no_grad():
-        lstm_input = string_to_tensor(SOS, ALL_CHARS).to(DEVICE)
+        lstm_input = string_to_tensor(SOS, INPUT_CHARS).to(DEVICE)
         lstm_hidden = lstm.initHidden(1)
         lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
         name = ''
@@ -120,18 +122,16 @@ def sample():
 
         for i in range(MAX_LENGTH):
             lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
-            lstm_probs[0][0][ALL_CHARS.find(PAD)] = -1000000
-            lstm_probs[0][0][ALL_CHARS.find(SOS)] = -1000000
             lstm_probs = torch.softmax(lstm_probs, dim=2)
             sample = torch.distributions.categorical.Categorical(lstm_probs).sample()
             sample = sample[0]
-            char = ALL_CHARS[sample]
+            char = OUTPUT_CHARS[sample]
 
             if char is EOS:
                 break
 
             name += char
-            lstm_input = torch.zeros(1, 1, LETTERS_COUNT).to(DEVICE)
+            lstm_input = torch.zeros(1, 1, INPUT_COUNT).to(DEVICE)
             lstm_input[0, 0, sample] = 1.
 
         return name
@@ -151,11 +151,13 @@ to_save = {
     'session_name': NAME,
     'hidden_size': HIDDEN_SZ,
     'num_layers': NUM_LAYERS,
-    'input_size/output': LETTERS_COUNT,
-    'input/output': ALL_CHARS,
-    'EOS_idx': EOS,
-    'SOS_idx': SOS,
-    'PAD_idx': PAD
+    'input': INPUT_CHARS,
+    'output': OUTPUT_CHARS,
+    'input_len': INPUT_COUNT,
+    'output_len': OUTPUT_COUNT,
+    'EOS': EOS,
+    'SOS': SOS,
+    'PAD': PAD
 }
 
 save_json(f'Config/{NAME}.json', to_save)
@@ -163,15 +165,12 @@ save_json(f'Config/{NAME}.json', to_save)
 df = pd.read_csv(TRAIN_FILE)
 dl = NameCategoricalDataLoader(df, BATCH_SZ)
 
-lstm = Decoder(LETTERS_COUNT, HIDDEN_SZ, LETTERS_COUNT, num_layers=NUM_LAYERS)
+lstm = Decoder(INPUT_COUNT, HIDDEN_SZ, OUTPUT_COUNT, num_layers=NUM_LAYERS)
 lstm.to(DEVICE)
-criterion = nn.CrossEntropyLoss(ignore_index=ALL_CHARS.index(PAD))
+criterion = nn.NLLLoss(ignore_index=OUTPUT_CHARS.index(PAD))
 optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 
 if args.continue_training is True:
      lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
-# iter_train(dl)
-
-for i in range(10):
-    print(sample())
+iter_train(dl)
