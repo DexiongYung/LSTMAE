@@ -31,7 +31,12 @@ def strings_to_tensor(names: list, max_name_len: int, allowed_letters: str):
     tensor = torch.zeros(max_name_len, len(names), len(allowed_letters))
     for i_name, name in enumerate(names):
         for i_char, letter in enumerate(name):
-            tensor[i_char][i_name][allowed_letters.find(letter)] = 1
+            index = allowed_letters.find(letter)
+
+            if index < 0:
+                raise Exception(f'{letter} is not a char in {allowed_letters}')
+
+            tensor[i_char][i_name][index] = 1
     return tensor
 
 
@@ -45,6 +50,11 @@ def targetsTensor(names: list, allowed_chars: str, max_len: int):
     ret = torch.zeros(max_len, batch_sz).type(torch.LongTensor)
     for i in range(max_len):
         for j in range(batch_sz):
+            index = allowed_chars.find(names[j][i])
+
+            if index < 0:
+                raise Exception(f'{names[j][i]} is not a char in {allowed_chars}')
+
             ret[i][j] = allowed_chars.find(names[j][i])
     return ret
 
