@@ -81,7 +81,7 @@ def train(x: str):
         lstm_input = src[i].unsqueeze(0)
         lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
         best_index = torch.argmax(lstm_probs, dim=2)
-        loss += criterion(lstm_probs[0], trg[i])
+        loss += criterion(lstm_probs, trg[i])
 
         for idx in range(len(names)):
             names[idx] += OUT_CHARS[best_index[0][idx].item()]
@@ -171,6 +171,6 @@ criterion = nn.NLLLoss(ignore_index=OUT_CHARS.find(PAD))
 optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 
 if args.continue_training is True:
-    lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
+     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
 iter_train(dl)
