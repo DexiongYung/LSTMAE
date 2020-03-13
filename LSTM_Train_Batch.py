@@ -73,7 +73,7 @@ def train(x: str):
 
     src = indexTensor(src_x, max_len, IN_CHARS).to(DEVICE)
     trg = targetsTensor(trg_x, max_len, OUT_CHARS).to(DEVICE)
-    
+
     lstm_hidden = lstm.initHidden(batch_sz)
     lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
 
@@ -181,8 +181,6 @@ to_save = {
 }
 
 save_json(f'Config/{NAME}.json', to_save)
-
-
 
 lstm = Decoder(IN_COUNT, HIDDEN_SZ, OUT_COUNT, padding_idx=IN_CHARS.find(PAD), num_layers=NUM_LAYERS,
                embed_size=EMBED_DIM)
