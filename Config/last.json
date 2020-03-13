@@ -1,1 +1,16 @@
+<<<<<<< HEAD
 {"session_name": "last", "hidden_size": 256, "num_layers": 5, "input": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'-201", "output": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'-21", "input_sz": 57, "output_sz": 56, "EOS": "2", "SOS": "0", "PAD": "1"}
+=======
+{
+  "session_name": "last",
+  "hidden_size": 256,
+  "num_layers": 5,
+  "input": "abcdefghijklmnopqrstuvwxyz'-201",
+  "output": "abcdefghijklmnopqrstuvwxyz'-21",
+  "input_sz": 31,
+  "output_sz": 30,
+  "EOS": "2",
+  "SOS": "0",
+  "PAD": "1"
+}
+>>>>>>> 783c4091f812188a7806c8edcd7e726b6ec85423

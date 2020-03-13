@@ -1,1 +1,11 @@
-{"session_name": "single_ln", "hidden_size": 256, "num_layers": 5, "input_size": 29, "output_size": 29, "input": "abcdefghijklmnopqrstuvwxyz'-0", "output": "abcdefghijklmnopqrstuvwxyz'-2", "out_EOS": "2", "in_SOS": "0"}
+{
+  "session_name": "single_ln",
+  "hidden_size": 256,
+  "num_layers": 5,
+  "input_size": 29,
+  "output_size": 29,
+  "input": "abcdefghijklmnopqrstuvwxyz'-0",
+  "output": "abcdefghijklmnopqrstuvwxyz'-2",
+  "out_EOS": "2",
+  "in_SOS": "0"
+}

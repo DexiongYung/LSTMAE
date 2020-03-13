@@ -24,6 +24,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', help='Name of the Session', nargs='?', default='first', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
+parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=8, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=100000, type=int)
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
@@ -39,6 +40,7 @@ args = parser.parse_args()
 NAME = args.name
 ITER = args.num_iter
 NUM_LAYERS = args.num_layers
+EMBED_DIM = args.embed_dim
 LR = args.lr
 HIDDEN_SZ = args.hidden_size
 TRAIN_FILE = args.train_file
@@ -62,7 +64,7 @@ DEVICE = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 def train(x: str):
     optimizer.zero_grad()
     loss = 0.
-    
+
     batch_sz = len(x)
     max_len = len(max(x, key=len)) + 1  # +1 for EOS xor SOS
 
@@ -88,7 +90,7 @@ def train(x: str):
 
     loss.backward()
     optimizer.step()
-    
+
     for p in lstm.parameters():
         p.data.add_(-LR, p.grad.data)
 
@@ -111,6 +113,7 @@ def iter_train(dl: NameCategoricalDataLoader, iterations: int = ITER, path: str 
             plot_losses(all_losses, x_label=f"Iteration of Batch Size: {BATCH_SZ}", y_label="NLLosss", filename=NAME)
             torch.save({'weights': lstm.state_dict()}, os.path.join(f"{path}{NAME}.path.tar"))
 
+
 def iter_train_dl(dl: DataLoader, epochs: int = ITER, path: str = "Checkpoints/", print_every: int = PRINTS):
     all_losses = []
     total_loss = 0
@@ -123,12 +126,14 @@ def iter_train_dl(dl: DataLoader, epochs: int = ITER, path: str = "Checkpoints/"
             if iter % print_every == 0:
                 all_losses.append(total_loss / print_every)
                 total_loss = 0
-                plot_losses(all_losses, x_label=f"Iteration of Batch Size: {BATCH_SZ}", y_label="NLLosss", filename=NAME)
+                plot_losses(all_losses, x_label=f"Iteration of Batch Size: {BATCH_SZ}", y_label="NLLosss",
+                            filename=NAME)
                 torch.save({'weights': lstm.state_dict()}, os.path.join(f"{path}{NAME}.path.tar"))
+
 
 def sample():
     with torch.no_grad():
-        lstm_input = indexTensor([SOS], 1 ,IN_CHARS).to(DEVICE)
+        lstm_input = indexTensor([SOS], 1, IN_CHARS).to(DEVICE)
         lstm_hidden = lstm.initHidden(1)
         lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
         name = ''
@@ -165,6 +170,7 @@ to_save = {
     'session_name': NAME,
     'hidden_size': HIDDEN_SZ,
     'num_layers': NUM_LAYERS,
+    'embed_dim': EMBED_DIM,
     'input': IN_CHARS,
     'output': OUT_CHARS,
     'input_sz': IN_COUNT,
@@ -179,12 +185,13 @@ save_json(f'Config/{NAME}.json', to_save)
 df = pd.read_csv(TRAIN_FILE)
 dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
 
-lstm = Decoder(IN_COUNT, HIDDEN_SZ, OUT_COUNT, padding_idx=IN_CHARS.find(PAD), num_layers=NUM_LAYERS)
+lstm = Decoder(IN_COUNT, HIDDEN_SZ, OUT_COUNT, padding_idx=IN_CHARS.find(PAD), num_layers=NUM_LAYERS,
+               embed_size=EMBED_DIM)
 lstm.to(DEVICE)
 criterion = nn.NLLLoss(ignore_index=OUT_CHARS.find(PAD))
 optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 
 if args.continue_training is True:
-     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
+    lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
 iter_train(dl)
