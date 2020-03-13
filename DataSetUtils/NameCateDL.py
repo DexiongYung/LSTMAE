@@ -6,7 +6,7 @@ class NameCategoricalDataLoader():
     def __init__(self, df: DataFrame, batch_sz: int, name_header: str = 'name', count_header: str = 'count'):
         self.name_hdr = name_header
         self.count_hdr = count_header
-        self.data_frame = df[name_header].str.lower().dropna()
+        self.data_frame = df[name_header].dropna()
         self.batch_sz = batch_sz
 
         categories = []
