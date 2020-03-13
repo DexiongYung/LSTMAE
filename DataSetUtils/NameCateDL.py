@@ -3,22 +3,13 @@ from pandas import DataFrame
 
 
 class NameCategoricalDataLoader():
-    def __init__(self, df: DataFrame, batch_sz: int, name_header: str = 'name', count_header: str = 'count'):
-        self.name_hdr = name_header
-        self.count_hdr = count_header
-        self.data_frame = df[name_header].dropna()
+    def __init__(self, df: DataFrame, batch_sz: int, name_header: str = 'name', probs_header: str = 'probs'):
+        categories = torch.FloatTensor(df[probs_header].tolist())
+        self.distribution = categories
+        self.data_frame = df[name_header]
         self.batch_sz = batch_sz
-
-        categories = []
-        count_sum = 0
-
-        for idx, row in df.iterrows():
-            count = row[self.count_hdr]
-            categories.append(count)
-            count_sum += count
-
-        categories = torch.FloatTensor(categories)
-        self.distribution = categories * (1 / count_sum)
+        self.name_hdr = name_header
+        self.probs_hdr = probs_header
 
     def sample(self):
         samples = []
