@@ -11,7 +11,8 @@ class Decoder(nn.Module):
     output_size: N_LETTER
     """
 
-    def __init__(self, input_size: int, hidden_size: int, output_size: int, padding_idx: int, embed_size: int = 8, num_layers: int = 4, drop_out: float = 0.1):
+    def __init__(self, input_size: int, hidden_size: int, output_size: int, padding_idx: int, embed_size: int = 8,
+                 num_layers: int = 4, drop_out: float = 0.1):
         super(Decoder, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -34,7 +35,7 @@ class Decoder(nn.Module):
         - hidden: (<num_layer x batch_size x hidden_size>, <num_layer x batch_size x hidden_size>)
         - lstm_out: <1 x batch_size x N_LETTER>
         """
-        input = self.embed(input)        
+        input = self.embed(input)
         lstm_out, hidden = self.lstm(input.unsqueeze(0), hidden)
         lstm_out = self.fc1(lstm_out)
         lstm_out = self.dropout(lstm_out)

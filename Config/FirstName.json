@@ -1,1 +1,12 @@
-{"session_name": "FirstName", "hidden_size": 256, "num_layers": 5, "input": "abcdefghijklmnopqrstuvwxyz'-201", "output": "abcdefghijklmnopqrstuvwxyz'-21", "input_len": 31, "output_len": 30, "EOS": "2", "SOS": "0", "PAD": "1"}
+{
+  "session_name": "FirstName",
+  "hidden_size": 256,
+  "num_layers": 5,
+  "input": "abcdefghijklmnopqrstuvwxyz'-201",
+  "output": "abcdefghijklmnopqrstuvwxyz'-21",
+  "input_len": 31,
+  "output_len": 30,
+  "EOS": "2",
+  "SOS": "0",
+  "PAD": "1"
+}

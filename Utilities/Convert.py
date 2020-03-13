@@ -39,7 +39,8 @@ def strings_to_tensor(names: list, max_name_len: int, allowed_letters: str):
             tensor[i_char][i_name][index] = 1
     return tensor
 
-def indexTensor(names: list, max_len: int,allowed_letters: str):
+
+def indexTensor(names: list, max_len: int, allowed_letters: str):
     tensor = torch.zeros(max_len, len(names)).type(torch.LongTensor)
     for i, name in enumerate(names):
         for j, letter in enumerate(name):
