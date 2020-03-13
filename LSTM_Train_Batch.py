@@ -22,7 +22,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='first', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='last', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=8, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
@@ -33,7 +33,7 @@ parser.add_argument('--column', help='Column header of data', nargs='?', default
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--batch', help='Batch size', nargs='?', default=5000, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=False, type=bool)
+                    default=True, type=bool)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -140,7 +140,7 @@ def sample():
         char = SOS
 
         for i in range(MAX_LENGTH):
-            lstm_probs, lstm_hidden = lstm(lstm_input, lstm_hidden)
+            lstm_probs, lstm_hidden = lstm(lstm_input[0], lstm_hidden)
             lstm_probs = torch.softmax(lstm_probs, dim=2)
             sample = torch.distributions.categorical.Categorical(lstm_probs).sample()
             sample = sample[0]
@@ -150,8 +150,7 @@ def sample():
                 break
 
             name += char
-            lstm_input = torch.zeros(1, 1, IN_COUNT).to(DEVICE)
-            lstm_input[0, 0, sample] = 1.
+            lstm_input = indexTensor([char], 1, IN_CHARS).to(DEVICE)
 
         return name
 
@@ -182,8 +181,7 @@ to_save = {
 
 save_json(f'Config/{NAME}.json', to_save)
 
-df = pd.read_csv(TRAIN_FILE)
-dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
+
 
 lstm = Decoder(IN_COUNT, HIDDEN_SZ, OUT_COUNT, padding_idx=IN_CHARS.find(PAD), num_layers=NUM_LAYERS,
                embed_size=EMBED_DIM)
@@ -194,4 +192,6 @@ optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 if args.continue_training is True:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
+df = pd.read_csv(TRAIN_FILE)
+dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
 iter_train(dl)
