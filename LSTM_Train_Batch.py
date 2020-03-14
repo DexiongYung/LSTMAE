@@ -26,12 +26,12 @@ parser.add_argument('--name', help='Name of the Session', nargs='?', default='la
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
 parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=8, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
-parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=100000, type=int)
+parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=200000, type=int)
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
-parser.add_argument('--batch', help='Batch size', nargs='?', default=5000, type=int)
+parser.add_argument('--batch', help='Batch size', nargs='?', default=250, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
                     default=True, type=bool)
 
