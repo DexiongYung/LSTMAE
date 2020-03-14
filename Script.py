@@ -1,6 +1,6 @@
-from pandas import DataFrame
-import pandas as pd
 import argparse
+import pandas as pd
+from pandas import DataFrame
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--file_pth', help='Path of file', nargs='?', type=str)
