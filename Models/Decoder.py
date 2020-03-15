@@ -12,7 +12,7 @@ class Decoder(nn.Module):
     """
 
     def __init__(self, input_size: int, hidden_size: int, output_size: int, padding_idx: int, embed_size: int = 8,
-                 num_layers: int = 4, drop_out: float = 0.1):
+                 num_layers: int = 4, drop_out: float = 0.2):
         super(Decoder, self).__init__()
         self.input_size = input_size
         self.hidden_size = hidden_size

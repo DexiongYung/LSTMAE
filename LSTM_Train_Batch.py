@@ -23,11 +23,11 @@ from Utilities.Train_Util import plot_losses, timeSince
 # Optional command line arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('--name', help='Name of the Session', nargs='?', default='first', type=str)
-parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=256, type=int)
+parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=512, type=int)
 parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=8, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=200000, type=int)
-parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
+parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=10, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
@@ -191,6 +191,9 @@ optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 if args.continue_training is True:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
-df = pd.read_csv(TRAIN_FILE)
-dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
-iter_train(dl)
+# df = pd.read_csv(TRAIN_FILE)
+# dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
+# iter_train(dl)
+
+for i in range(10):
+    print(sample())
