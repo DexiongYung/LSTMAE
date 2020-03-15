@@ -22,7 +22,7 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='last', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='first', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=128, type=int)
 parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=4, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
