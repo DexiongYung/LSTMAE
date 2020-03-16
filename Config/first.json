@@ -1,1 +1,1 @@
-{"session_name": "first", "hidden_size": 500, "num_layers": 10, "embed_dim": 8, "input": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'-201", "output": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'-21", "input_sz": 57, "output_sz": 56, "EOS": "2", "SOS": "0", "PAD": "1"}
+{"session_name": "first", "hidden_size": 128, "num_layers": 5, "embed_dim": 4, "input": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'-201", "output": "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'-21", "input_sz": 57, "output_sz": 56, "EOS": "2", "SOS": "0", "PAD": "1"}
