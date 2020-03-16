@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor
 
+
 def indexTensor(names: list, max_len: int, allowed_chars: list):
     tensor = torch.zeros(max_len, len(names)).type(torch.LongTensor)
     for i, name in enumerate(names):
