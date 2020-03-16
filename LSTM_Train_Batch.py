@@ -147,7 +147,7 @@ def sample():
             sample = sample[0]
             char = OUT_CHARS[sample]
 
-            if char is EOS:
+            if sample is OUT_CHARS.index(EOS):
                 break
 
             name += char
@@ -177,7 +177,7 @@ to_save = {
     'output_sz': OUT_COUNT,
     'EOS': EOS,
     'SOS': SOS,
-    'PAD': PAD
+    'PAD': PAD,
 }
 
 save_json(f'Config/{NAME}.json', to_save)
