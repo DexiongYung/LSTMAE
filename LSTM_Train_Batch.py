@@ -33,7 +33,7 @@ parser.add_argument('--column', help='Column header of data', nargs='?', default
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
 parser.add_argument('--batch', help='Batch size', nargs='?', default=4000, type=int)
 parser.add_argument('--continue_training', help='Boolean whether to continue training an existing model', nargs='?',
-                    default=True, type=bool)
+                    default=1, type=int)
 
 # Parse optional args from command line and save the configurations into a JSON file
 args = parser.parse_args()
@@ -48,6 +48,7 @@ BATCH_SZ = args.batch
 COLUMN = args.column
 PRINTS = args.print
 CLIP = 1
+
 
 # Global variables
 SOS = 'SOS'
@@ -185,7 +186,7 @@ lstm.to(DEVICE)
 criterion = nn.NLLLoss(ignore_index=OUT_CHARS.index(PAD))
 optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 
-if args.continue_training is True:
+if args.continue_training == 1:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
 df = pd.read_csv(TRAIN_FILE)
