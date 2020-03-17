@@ -92,9 +92,6 @@ def train(x: str):
     loss.backward()
     optimizer.step()
 
-    for p in lstm.parameters():
-        p.data.add_(-LR, p.grad.data)
-
     return names, loss.item()
 
 
