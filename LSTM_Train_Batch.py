@@ -22,12 +22,12 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='first', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='first_8', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=128, type=int)
-parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=4, type=int)
+parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=2, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=200000, type=int)
-parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
+parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=8, type=int)
 parser.add_argument('--train_file', help='File to train on', nargs='?', default='Data/FirstNames.csv', type=str)
 parser.add_argument('--column', help='Column header of data', nargs='?', default='name', type=str)
 parser.add_argument('--print', help='Print every', nargs='?', default=100, type=int)
@@ -131,7 +131,7 @@ def iter_train_dl(dl: DataLoader, epochs: int = ITER, path: str = "Checkpoints/"
 
 def sample():
     with torch.no_grad():
-        lstm_input = indexTensor([SOS], 1, IN_CHARS).to(DEVICE)
+        lstm_input = indexTensor([[SOS]], 1, IN_CHARS).to(DEVICE)
         lstm_hidden = lstm.initHidden(1)
         lstm_hidden = (lstm_hidden[0].to(DEVICE), lstm_hidden[1].to(DEVICE))
         name = ''
@@ -144,11 +144,11 @@ def sample():
             sample = sample[0]
             char = OUT_CHARS[sample]
 
-            if sample is OUT_CHARS.index(EOS):
+            if sample == OUT_CHARS.index(EOS):
                 break
 
             name += char
-            lstm_input = indexTensor([char], 1, IN_CHARS).to(DEVICE)
+            lstm_input = indexTensor([[char]], 1, IN_CHARS).to(DEVICE)
 
         return name
 
