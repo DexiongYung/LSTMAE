@@ -188,9 +188,6 @@ optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 if args.continue_training == 1:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
-# df = pd.read_csv(TRAIN_FILE)
-# dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
-# iter_train(dl)
-
-for i in range(20):
-    print(sample())
+df = pd.read_csv(TRAIN_FILE)
+dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
+iter_train(dl)
