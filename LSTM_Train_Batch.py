@@ -22,9 +22,9 @@ from Utilities.Train_Util import plot_losses, timeSince
 
 # Optional command line arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('--name', help='Name of the Session', nargs='?', default='first', type=str)
+parser.add_argument('--name', help='Name of the Session', nargs='?', default='first_16', type=str)
 parser.add_argument('--hidden_size', help='Size of the hidden layer of LSTM', nargs='?', default=128, type=int)
-parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=4, type=int)
+parser.add_argument('--embed_dim', help='Size of embedding dimension', nargs='?', default=16, type=int)
 parser.add_argument('--lr', help='Learning rate', nargs='?', default=0.005, type=float)
 parser.add_argument('--num_iter', help='Number of iterations', nargs='?', default=200000, type=int)
 parser.add_argument('--num_layers', help='Number of layers', nargs='?', default=5, type=int)
@@ -48,7 +48,6 @@ BATCH_SZ = args.batch
 COLUMN = args.column
 PRINTS = args.print
 CLIP = 1
-
 
 # Global variables
 SOS = 'SOS'
@@ -189,6 +188,9 @@ optimizer = torch.optim.Adam(lstm.parameters(), lr=LR)
 if args.continue_training == 1:
     lstm.load_state_dict(torch.load(f'Checkpoints/{NAME}.path.tar')['weights'])
 
-df = pd.read_csv(TRAIN_FILE)
-dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
-iter_train(dl)
+# df = pd.read_csv(TRAIN_FILE)
+# dl = NameCategoricalDataLoader(df, batch_sz=BATCH_SZ)
+# iter_train(dl)
+
+for i in range(20):
+    print(sample())
